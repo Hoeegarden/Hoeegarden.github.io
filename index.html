@@ -1,256 +1,494 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Моё расписание</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f6f8fa;
-            color: #24292e;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.5;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            color: #0969da;
-            margin-bottom: 30px;
-        }
-        .day-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .day-title {
-            font-size: 1.5em;
-            color: #24292e;
-            border-bottom: 2px solid #e1e4e8;
-            padding-bottom: 10px;
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-        .lesson {
-            display: flex;
-            flex-direction: column;
-            padding: 10px 0;
-            border-bottom: 1px solid #eaecef;
-        }
-        .lesson:last-child {
-            border-bottom: none;
-        }
-        .time {
-            font-weight: bold;
-            color: #0969da;
-            margin-bottom: 5px;
-            font-size: 1.1em;
-        }
-        .subject-info {
-            color: #586069;
-        }
-        .subject-title {
-            font-weight: 600;
-            color: #24292e;
-            font-size: 1.05em;
-        }
-        .chill-sleep {
-            color: #2ea043;
-            font-weight: bold;
-            font-style: italic;
-        }
-        
-        /* Адаптация для широких экранов */
-        @media (min-width: 600px) {
-            .lesson {
-                flex-direction: row;
-                align-items: flex-start;
-            }
-            .time {
-                min-width: 130px;
-                margin-bottom: 0;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Моё расписание</title>
+<style>
+:root {
+--bg-color: #f6f8fa;
+--text-color: #24292e;
+--card-bg: white;
+--border-color: #e1e4e8;
+--accent-color: #0969da;
+--secondary-text: #586069;
+--lesson-border: #eaecef;
+--tab-bg: #e1e4e8;
+--tab-active: #0969da;
+--tab-text: #24292e;
+--tab-active-text: white;
+--btn-bg: #ffffff;
+--btn-border: #d0d7de;
+}
+
+body.dark-theme {
+--bg-color: #0d1117;
+--text-color: #c9d1d9;
+--card-bg: #161b22;
+--border-color: #30363d;
+--accent-color: #58a6ff;
+--secondary-text: #8b949e;
+--lesson-border: #21262d;
+--tab-bg: #21262d;
+--tab-active: #58a6ff;
+--tab-text: #c9d1d9;
+--tab-active-text: #0d1117;
+--btn-bg: #21262d;
+--btn-border: #30363d;
+}
+
+body {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background-color: var(--bg-color);
+color: var(--text-color);
+margin: 0;
+padding: 20px;
+line-height: 1.5;
+transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+max-width: 800px;
+margin: 0 auto;
+}
+
+.header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 20px;
+}
+
+h1 {
+color: var(--accent-color);
+margin: 0;
+font-size: 1.8em;
+}
+
+#theme-toggle {
+background-color: var(--btn-bg);
+color: var(--text-color);
+border: 1px solid var(--btn-border);
+padding: 8px 12px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 0.9em;
+font-weight: 600;
+transition: 0.2s;
+}
+
+#theme-toggle:hover { opacity: 0.8; }
+
+/* Блок текущей пары */
+.live-banner {
+background: linear-gradient(135deg, #0969da, #033d8b);
+color: white;
+border-radius: 10px;
+padding: 15px 20px;
+margin-bottom: 20px;
+box-shadow: 0 4px 12px rgba(9, 105, 218, 0.3);
+animation: fadeIn 0.5s ease-in-out;
+}
+
+body.dark-theme .live-banner {
+background: linear-gradient(135deg, #1f6feb, #113d80);
+}
+
+.live-banner .subject-title { color: white; font-size: 1.1em; }
+.live-banner .subject-info { color: #e6edf3; }
+.live-banner .chill-sleep { color: #7ee787; }
+
+.tabs {
+display: flex;
+gap: 8px;
+margin-bottom: 20px;
+overflow-x: auto;
+padding-bottom: 5px;
+}
+
+.tab-btn {
+background-color: var(--tab-bg);
+color: var(--tab-text);
+border: none;
+padding: 10px 16px;
+border-radius: 8px;
+font-size: 1em;
+font-weight: bold;
+cursor: pointer;
+transition: 0.2s;
+white-space: nowrap;
+}
+
+.tab-btn.active {
+background-color: var(--tab-active);
+color: var(--tab-active-text);
+}
+
+.day-card {
+background: var(--card-bg);
+border-radius: 10px;
+padding: 20px;
+box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+display: none;
+animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(5px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.day-title {
+font-size: 1.5em;
+color: var(--text-color);
+border-bottom: 2px solid var(--border-color);
+padding-bottom: 10px;
+margin-top: 0;
+margin-bottom: 15px;
+}
+
+.lesson {
+display: flex;
+flex-direction: column;
+padding: 10px 0;
+border-bottom: 1px solid var(--lesson-border);
+}
+
+.lesson:last-child { border-bottom: none; }
+
+.time {
+font-weight: bold;
+color: var(--accent-color);
+margin-bottom: 5px;
+font-size: 1.1em;
+}
+
+.subject-info { color: var(--secondary-text); }
+
+.subject-title {
+font-weight: 600;
+color: var(--text-color);
+font-size: 1.05em;
+}
+
+.chill-sleep {
+color: #2ea043;
+font-weight: bold;
+font-style: italic;
+}
+
+@media (min-width: 600px) {
+.lesson { flex-direction: row; align-items: flex-start; }
+.time { min-width: 130px; margin-bottom: 0; }
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎓 Расписание занятий</h1>
+<div class="container">
 
-        <!-- Понедельник -->
-        <div class="day-card">
-            <h2 class="day-title">Понедельник</h2>
-            <div class="lesson">
-                <div class="time">8.30 - 10.00</div>
-                <div class="subject-info">
-                    <div class="subject-title">(1-9 нед.) Инновационная экономика и технологическое предпринимательство</div>
-                    Сафина Л.М., ауд. 109 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">8.30 - 10.00</div>
-                <div class="subject-info">
-                    <div class="subject-title">(10-18 нед.) Теория алгоритмов и анализ сложности</div>
-                    Сафина Л.И., ауд. 109 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">10.10 - 11.40</div>
-                <div class="subject-info chill-sleep">💤 Sleep...</div>
-            </div>
-            <div class="lesson">
-                <div class="time">12.10 - 13.40</div>
-                <div class="subject-info">
-                    <div class="subject-title">(н/н 1-17 нед.) Современные графические редакторы</div>
-                    Хафизова А.Д., ауд. 1112 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">12.10 - 13.40</div>
-                <div class="subject-info">
-                    <div class="subject-title">(ч/н 2-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
-                    Мухтарова Т.М., ауд. 802 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">14.00 - 15.30</div>
-                <div class="subject-info">
-                    <div class="subject-title">(1-17 неделя) Элективные курсы по физической культуре и спорту</div>
-                    КСК КФУ ауд. УНИКС (Проф.Нужина 2/27). (Дополнительно - 01.10.2026, 15.10.2026 ЦОР на edu.kpfu.ru)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">15.50 - 17.20</div>
-                <div class="subject-info">
-                    <div class="subject-title">(ч/н 2-18 нед.) Технологическая (проектно-технологическая) практика</div>
-                    Еникеева А.И., ауд. 1111 (Кремл.35)
-                </div>
-            </div>
-        </div>
+<div class="header">
+<h1>🎓 Расписание</h1>
+<button id="theme-toggle">🌙 Темная</button>
+</div>
 
-        <!-- Вторник -->
-        <div class="day-card">
-            <h2 class="day-title">Вторник</h2>
-            <div class="lesson">
-                <div class="time">8.30 - 10.00</div>
-                <div class="subject-info">
-                    <div class="subject-title">(1-18 нед.) Иностранный язык</div>
-                    Яруллина Д.А. ауд. 409; Маршева Т.В. ауд. 511; Хованская Е.С. ауд. 309Б; Айметдинов А.Р. ауд. 507 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">10.10 - 11.40</div>
-                <div class="subject-info">
-                    <div class="subject-title">(1-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
-                    Мухтарова Т.М., ауд. 811 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">12.10 - 13.40</div>
-                <div class="subject-info">
-                    <div class="subject-title">(1-18 нед.) Теория алгоритмов и анализ сложности</div>
-                    Ахметшина Д.И., ауд. 1112 (Кремл. 35)
-                </div>
-            </div>
-        </div>
+<!-- Блок, который показывает, какая пара идет сейчас -->
+<div id="live-banner" class="live-banner">
+<!-- Заполняется через JavaScript -->
+</div>
 
-        <!-- Среда -->
-        <div class="day-card">
-            <h2 class="day-title">Среда</h2>
-            <div class="lesson">
-                <div class="time">8.30 - 10.00</div>
-                <div class="subject-info chill-sleep">💤 Sleep...</div>
-            </div>
-            <div class="lesson">
-                <div class="time">10.10 - 11.40</div>
-                <div class="subject-info">
-                    <div class="subject-title">(1-18 нед.) Базы данных</div>
-                    Еникеев И.А., ауд. 811 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">12.10 - 13.40</div>
-                <div class="subject-info">
-                    <div class="subject-title">(ч/н 2-18 нед.) Инновационная экономика и технологическое предпринимательство</div>
-                    Шавалеева Ч.М., ауд. 1010 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">13.50 - 15.20</div>
-                <div class="subject-info">
-                    <div class="subject-title">(1-18 нед.) Основы дизайна и проектирования программного обеспечения</div>
-                    Кузнецова И.С., ауд. 1111 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">15.50 - 17.20</div>
-                <div class="subject-info">
-                    <div class="subject-title">(ч/н 2-18 нед.) Теория алгоритмов и анализ сложности</div>
-                    Сафина Л.И., ауд. 218 (Кремл. 35)
-                </div>
-            </div>
-        </div>
+<!-- Навигация по дням -->
+<div class="tabs">
+<button class="tab-btn" data-day="monday" onclick="showDay('monday', this)">Пн</button>
+<button class="tab-btn" data-day="tuesday" onclick="showDay('tuesday', this)">Вт</button>
+<button class="tab-btn" data-day="wednesday" onclick="showDay('wednesday', this)">Ср</button>
+<button class="tab-btn" data-day="thursday" onclick="showDay('thursday', this)">Чт</button>
+<button class="tab-btn" data-day="friday" onclick="showDay('friday', this)">Пт</button>
+<button class="tab-btn" data-day="saturday" onclick="showDay('saturday', this)">Сб</button>
+</div>
 
-        <!-- Четверг -->
-        <div class="day-card">
-            <h2 class="day-title">Четверг</h2>
-            <div class="lesson">
-                <div class="time">13.50 - 15.20</div>
-                <div class="subject-info">
-                    <div class="subject-title">Элективные курсы по физической культуре и спорту</div>
-                    КСК КФУ ауд. УНИКС (Проф.Нужина 2/27). (Дополнительно - 01.10.2026, 15.10.2026 ЦОР на edu.kpfu.ru)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">19.10 - 20.40</div>
-                <div class="subject-info">
-                    <div class="subject-title">(1-18 нед.) Основы дизайна и проектирования программного обеспечения</div>
-                    Кузнецова И.С. — лекция в формате ЭОР.
-                </div>
-            </div>
-        </div>
+<!-- Понедельник -->
+<div id="monday" class="day-card">
+<h2 class="day-title">Понедельник</h2>
+<div class="lesson">
+<div class="time">8.30 - 10.00</div>
+<div class="subject-info">
+<div class="subject-title">(1-9 нед.) Инновационная экономика и технологическое предпринимательство</div>
+Сафина Л.М., ауд. 109 (Кремл. 35)
+</div>
+</div>
+<div class="lesson">
+<div class="time">8.30 - 10.00</div>
+<div class="subject-info">
+<div class="subject-title">(10-18 нед.) Теория алгоритмов и анализ сложности</div>
+Сафина Л.И., ауд. 109 (Кремл. 35)
+</div>
+</div>
+<div class="lesson">
+<div class="time">10.10 - 11.40</div>
+<div class="subject-info chill-sleep">💤 Sleep...</div>
+</div>
+<div class="lesson">
+<div class="time">12.10 - 13.40</div>
+<div class="subject-info">
+<div class="subject-title">(н/н 1-17 нед.) Современные графические редакторы</div>
+Хафизова А.Д., ауд. 1112 (Кремл. 35)
+</div>
+</div>
+<div class="lesson">
+<div class="time">12.10 - 13.40</div>
+<div class="subject-info">
+<div class="subject-title">(ч/н 2-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
+Мухтарова Т.М., ауд. 802 (Кремл. 35)
+</div>
+</div>
+<div class="lesson">
+<div class="time">14.00 - 15.30</div>
+<div class="subject-info">
+<div class="subject-title">(1-17 неделя) Элективные курсы по физической культуре и спорту</div>
+КСК КФУ ауд. УНИКС (Проф.Нужина 2/27). (Доп. - 01.10.2026, 15.10.2026 ЦОР)
+</div>
+</div>
+<div class="lesson">
+<div class="time">15.50 - 17.20</div>
+<div class="subject-info">
+<div class="subject-title">(ч/н 2-18 нед.) Технологическая (проектно-технологическая) практика</div>
+Еникеева А.И., ауд. 1111 (Кремл.35)
+</div>
+</div>
+</div>
 
-        <!-- Пятница -->
-        <div class="day-card">
-            <h2 class="day-title">Пятница</h2>
-            <div class="lesson">
-                <div class="time">Весь день</div>
-                <div class="subject-info chill-sleep">🏖️ Chill...</div>
-            </div>
-        </div>
+<!-- Вторник -->
+<div id="tuesday" class="day-card">
+<h2 class="day-title">Вторник</h2>
+<div class="lesson">
+<div class="time">8.30 - 10.00</div>
+<div class="subject-info">
+<div class="subject-title">(1-18 нед.) Иностранный язык</div>
+Яруллина Д.А. ауд. 409; Маршева Т.В. ауд. 511; Хованская Е.С. ауд. 309Б; Айметдинов А.Р. ауд. 507
+</div>
+</div>
+<div class="lesson">
+<div class="time">10.10 - 11.40</div>
+<div class="subject-info">
+<div class="subject-title">(1-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
+Мухтарова Т.М., ауд. 811 (Кремл. 35)
+</div>
+</div>
+<div class="lesson">
+<div class="time">12.10 - 13.40</div>
+<div class="subject-info">
+<div class="subject-title">(1-18 нед.) Теория алгоритмов и анализ сложности</div>
+Ахметшина Д.И., ауд. 1112 (Кремл. 35)
+</div>
+</div>
+</div>
 
-        <!-- Суббота -->
-        <div class="day-card">
-            <h2 class="day-title">Суббота</h2>
-            <div class="lesson">
-                <div class="time">8.30 - 10.00</div>
-                <div class="subject-info">
-                    <div class="subject-title">(ч/н 2-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
-                    Яруллин Р.С., ауд. 216 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">10.10 - 11.40</div>
-                <div class="subject-info">
-                    <div class="subject-title">(1-18 нед.) Базы данных</div>
-                    Еникеев И.А., ауд. 218 (Кремл. 35)
-                </div>
-            </div>
-            <div class="lesson">
-                <div class="time">12.10 - 13.40</div>
-                <div class="subject-info">
-                    <div class="subject-title">(н/н 1-17 нед.) Базы данных</div>
-                    Еникеев И.А., ауд 809 (Кремл. 35)
-                </div>
-            </div>
-        </div>
+<!-- Среда -->
+<div id="wednesday" class="day-card">
+<h2 class="day-title">Среда</h2>
+<div class="lesson">
+<div class="time">8.30 - 10.00</div>
+<div class="subject-info chill-sleep">💤 Sleep...</div>
+</div>
+<div class="lesson">
+<div class="time">10.10 - 11.40</div>
+<div class="subject-info">
+<div class="subject-title">(1-18 нед.) Базы данных</div>
+Еникеев И.А., ауд. 811 (Кремл. 35)
+</div>
+</div>
+<div class="lesson">
+<div class="time">12.10 - 13.40</div>
+<div class="subject-info">
+<div class="subject-title">(ч/н 2-18 нед.) Инновационная экономика и технологическое предпринимательство</div>
+Шавалеева Ч.М., ауд. 1010 (Кремл. 35)
+</div>
+</div>
+<div class="lesson">
+<div class="time">13.50 - 15.20</div>
+<div class="subject-info">
+<div class="subject-title">(1-18 нед.) Основы дизайна и проектирования программного обеспечения</div>
+Кузнецова И.С., ауд. 1111 (Кремл. 35)
+</div>
+</div>
+<div class="lesson">
+<div class="time">15.50 - 17.20</div>
+<div class="subject-info">
+<div class="subject-title">(ч/н 2-18 нед.) Теория алгоритмов и анализ сложности</div>
+Сафина Л.И., ауд. 218 (Кремл. 35)
+</div>
+</div>
+</div>
 
-    </div>
+<!-- Четверг -->
+<div id="thursday" class="day-card">
+<h2 class="day-title">Четверг</h2>
+<div class="lesson">
+<div class="time">13.50 - 15.20</div>
+<div class="subject-info">
+<div class="subject-title">Элективные курсы по физической культуре и спорту</div>
+КСК КФУ ауд. УНИКС (Проф.Нужина 2/27). (Доп. - 01.10.2026, 15.10.2026 ЦОР)
+</div>
+</div>
+<div class="lesson">
+<div class="time">19.10 - 20.40</div>
+<div class="subject-info">
+<div class="subject-title">(1-18 нед.) Основы дизайна и проектирования программного обеспечения</div>
+Кузнецова И.С. — лекция в формате ЭОР.
+</div>
+</div>
+</div>
+
+<!-- Пятница -->
+<div id="friday" class="day-card">
+<h2 class="day-title">Пятница</h2>
+<div class="lesson">
+<div class="time">Весь день</div>
+<div class="subject-info chill-sleep">🏖️ Chill...</div>
+</div>
+</div>
+
+<!-- Суббота -->
+<div id="saturday" class="day-card">
+<h2 class="day-title">Суббота</h2>
+<div class="lesson">
+<div class="time">8.30 - 10.00</div>
+<div class="subject-info">
+<div class="subject-title">(ч/н 2-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
+Яруллин Р.С., ауд. 216 (Кремл. 35)
+</div>
+</div>
+<div class="lesson">
+<div class="time">10.10 - 11.40</div>
+<div class="subject-info">
+<div class="subject-title">(1-18 нед.) Базы данных</div>
+Еникеев И.А., ауд. 218 (Кремл. 35)
+</div>
+</div>
+<div class="lesson">
+<div class="time">12.10 - 13.40</div>
+<div class="subject-info">
+<div class="subject-title">(н/н 1-17 нед.) Базы данных</div>
+Еникеев И.А., ауд 809 (Кремл. 35)
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- JavaScript -->
+<script>
+// Функция переключения дней
+function showDay(dayId, btnElement) {
+const cards = document.querySelectorAll('.day-card');
+cards.forEach(card => card.style.display = 'none');
+
+const btns = document.querySelectorAll('.tab-btn');
+btns.forEach(btn => btn.classList.remove('active'));
+
+document.getElementById(dayId).style.display = 'block';
+if (btnElement) {
+btnElement.classList.add('active');
+}
+}
+
+// Логика темной темы
+const themeToggle = document.getElementById('theme-toggle');
+const body = document.body;
+
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'dark') {
+body.classList.add('dark-theme');
+themeToggle.textContent = '☀️ Светлая';
+}
+
+themeToggle.addEventListener('click', () => {
+body.classList.toggle('dark-theme');
+if (body.classList.contains('dark-theme')) {
+localStorage.setItem('theme', 'dark');
+themeToggle.textContent = '☀️ Светлая';
+} else {
+localStorage.setItem('theme', 'light');
+themeToggle.textContent = '🌙 Темная';
+}
+});
+
+// Функция обновления статуса "Какая пара сейчас"
+function updateLiveStatus() {
+// Получаем точное время по Москве (UTC+3)
+const now = new Date();
+const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+const mskDate = new Date(utc + (3600000 * 3));
+
+const dayIdx = mskDate.getDay(); // 0 = Вс, 1 = Пн, ... 6 = Сб
+const hours = mskDate.getHours();
+const minutes = mskDate.getMinutes();
+const currentMins = hours * 60 + minutes;
+const timeStr = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+
+const daysMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+const currentDayId = daysMap[dayIdx];
+const banner = document.getElementById('live-banner');
+
+if (currentDayId === 'sunday') {
+banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Сегодня воскресенье, пар нет. Отдыхаем! 🎉`;
+return;
+}
+if (currentDayId === 'friday') {
+banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Пятница! 🏖️ Chill...`;
+return;
+}
+
+const dayCard = document.getElementById(currentDayId);
+if (!dayCard) return;
+
+const lessons = dayCard.querySelectorAll('.lesson');
+let isLessonNow = false;
+
+lessons.forEach(lesson => {
+const timeText = lesson.querySelector('.time').innerText;
+// Ищем шаблон времени (например, 8.30 - 10.00 или 12:10 - 13:40)
+const timeMatch = timeText.match(/(\d{1,2})[.:](\d{2})\s*-\s*(\d{1,2})[.:](\d{2})/);
+
+if (timeMatch) {
+const startMins = parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2]);
+const endMins = parseInt(timeMatch[3]) * 60 + parseInt(timeMatch[4]);
+
+if (currentMins >= startMins && currentMins <= endMins) {
+isLessonNow = true;
+const subjectHTML = lesson.querySelector('.subject-info').innerHTML;
+banner.innerHTML = `
+<div style="margin-bottom: 8px;"><strong>🕒 ${timeStr} (МСК) — Идёт прямо сейчас:</strong></div>
+<div class="subject-info">${subjectHTML}</div>
+`;
+}
+}
+});
+
+if (!isLessonNow) {
+banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Сейчас пар нет или идет перемена.`;
+}
+}
+
+// Что происходит при загрузке страницы
+window.onload = () => {
+// 1. Узнаем текущий день по МСК
+const now = new Date();
+const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+const mskDate = new Date(utc + (3600000 * 3));
+let currentDayId = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][mskDate.getDay()];
+
+// Если воскресенье — по умолчанию открываем понедельник
+if (currentDayId === 'sunday') currentDayId = 'monday';
+
+// 2. Активируем вкладку текущего дня
+const btn = document.querySelector(`.tab-btn[data-day="${currentDayId}"]`);
+showDay(currentDayId, btn);
+
+// 3. Запускаем "живое время" и ставим автообновление каждую минуту
+updateLiveStatus();
+setInterval(updateLiveStatus, 60000);
+};
+</script>
 </body>
 </html>
