@@ -3,48 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой первый сайт</title>
+    <title>Моё расписание</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f6f8fa;
             color: #24292e;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             margin: 0;
-            text-align: center;
+            padding: 20px;
+            line-height: 1.5;
         }
-        .card {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 90%;
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
         }
         h1 {
+            text-align: center;
             color: #0969da;
-            margin-top: 0;
+            margin-bottom: 30px;
         }
-        p {
-            line-height: 1.6;
+        .day-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .day-title {
+            font-size: 1.5em;
+            color: #24292e;
+            border-bottom: 2px solid #e1e4e8;
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .lesson {
+            display: flex;
+            flex-direction: column;
+            padding: 10px 0;
+            border-bottom: 1px solid #eaecef;
+        }
+        .lesson:last-child {
+            border-bottom: none;
+        }
+        .time {
+            font-weight: bold;
+            color: #0969da;
+            margin-bottom: 5px;
             font-size: 1.1em;
         }
-        .emoji {
-            font-size: 4em;
-            margin-bottom: 10px;
+        .subject-info {
+            color: #586069;
+        }
+        .subject-title {
+            font-weight: 600;
+            color: #24292e;
+            font-size: 1.05em;
+        }
+        .chill-sleep {
+            color: #2ea043;
+            font-weight: bold;
+            font-style: italic;
+        }
+        
+        /* Адаптация для широких экранов */
+        @media (min-width: 600px) {
+            .lesson {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+            .time {
+                min-width: 130px;
+                margin-bottom: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="emoji">🚀</div>
-        <h1>Ура, всё работает!</h1>
-        <p>Это тестовая страница. Если вы видите этот текст по вашей ссылке, значит развертывание на <strong>GitHub Pages</strong> прошло успешно.</p>
-        <p>Теперь сюда можно добавлять новые страницы, картинки и скрипты.</p>
+    <div class="container">
+        <h1>🎓 Расписание занятий</h1>
+
+        <!-- Понедельник -->
+        <div class="day-card">
+            <h2 class="day-title">Понедельник</h2>
+            <div class="lesson">
+                <div class="time">8.30 - 10.00</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-9 нед.) Инновационная экономика и технологическое предпринимательство</div>
+                    Сафина Л.М., ауд. 109 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">8.30 - 10.00</div>
+                <div class="subject-info">
+                    <div class="subject-title">(10-18 нед.) Теория алгоритмов и анализ сложности</div>
+                    Сафина Л.И., ауд. 109 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">10.10 - 11.40</div>
+                <div class="subject-info chill-sleep">💤 Sleep...</div>
+            </div>
+            <div class="lesson">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(н/н 1-17 нед.) Современные графические редакторы</div>
+                    Хафизова А.Д., ауд. 1112 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(ч/н 2-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
+                    Мухтарова Т.М., ауд. 802 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">14.00 - 15.30</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-17 неделя) Элективные курсы по физической культуре и спорту</div>
+                    КСК КФУ ауд. УНИКС (Проф.Нужина 2/27). (Дополнительно - 01.10.2026, 15.10.2026 ЦОР на edu.kpfu.ru)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">15.50 - 17.20</div>
+                <div class="subject-info">
+                    <div class="subject-title">(ч/н 2-18 нед.) Технологическая (проектно-технологическая) практика</div>
+                    Еникеева А.И., ауд. 1111 (Кремл.35)
+                </div>
+            </div>
+        </div>
+
+        <!-- Вторник -->
+        <div class="day-card">
+            <h2 class="day-title">Вторник</h2>
+            <div class="lesson">
+                <div class="time">8.30 - 10.00</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Иностранный язык</div>
+                    Яруллина Д.А. ауд. 409; Маршева Т.В. ауд. 511; Хованская Е.С. ауд. 309Б; Айметдинов А.Р. ауд. 507 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">10.10 - 11.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
+                    Мухтарова Т.М., ауд. 811 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Теория алгоритмов и анализ сложности</div>
+                    Ахметшина Д.И., ауд. 1112 (Кремл. 35)
+                </div>
+            </div>
+        </div>
+
+        <!-- Среда -->
+        <div class="day-card">
+            <h2 class="day-title">Среда</h2>
+            <div class="lesson">
+                <div class="time">8.30 - 10.00</div>
+                <div class="subject-info chill-sleep">💤 Sleep...</div>
+            </div>
+            <div class="lesson">
+                <div class="time">10.10 - 11.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Базы данных</div>
+                    Еникеев И.А., ауд. 811 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(ч/н 2-18 нед.) Инновационная экономика и технологическое предпринимательство</div>
+                    Шавалеева Ч.М., ауд. 1010 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">13.50 - 15.20</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Основы дизайна и проектирования программного обеспечения</div>
+                    Кузнецова И.С., ауд. 1111 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">15.50 - 17.20</div>
+                <div class="subject-info">
+                    <div class="subject-title">(ч/н 2-18 нед.) Теория алгоритмов и анализ сложности</div>
+                    Сафина Л.И., ауд. 218 (Кремл. 35)
+                </div>
+            </div>
+        </div>
+
+        <!-- Четверг -->
+        <div class="day-card">
+            <h2 class="day-title">Четверг</h2>
+            <div class="lesson">
+                <div class="time">13.50 - 15.20</div>
+                <div class="subject-info">
+                    <div class="subject-title">Элективные курсы по физической культуре и спорту</div>
+                    КСК КФУ ауд. УНИКС (Проф.Нужина 2/27). (Дополнительно - 01.10.2026, 15.10.2026 ЦОР на edu.kpfu.ru)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">19.10 - 20.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Основы дизайна и проектирования программного обеспечения</div>
+                    Кузнецова И.С. — лекция в формате ЭОР.
+                </div>
+            </div>
+        </div>
+
+        <!-- Пятница -->
+        <div class="day-card">
+            <h2 class="day-title">Пятница</h2>
+            <div class="lesson">
+                <div class="time">Весь день</div>
+                <div class="subject-info chill-sleep">🏖️ Chill...</div>
+            </div>
+        </div>
+
+        <!-- Суббота -->
+        <div class="day-card">
+            <h2 class="day-title">Суббота</h2>
+            <div class="lesson">
+                <div class="time">8.30 - 10.00</div>
+                <div class="subject-info">
+                    <div class="subject-title">(ч/н 2-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
+                    Яруллин Р.С., ауд. 216 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">10.10 - 11.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Базы данных</div>
+                    Еникеев И.А., ауд. 218 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(н/н 1-17 нед.) Базы данных</div>
+                    Еникеев И.А., ауд 809 (Кремл. 35)
+                </div>
+            </div>
+        </div>
+
     </div>
 </body>
 </html>
