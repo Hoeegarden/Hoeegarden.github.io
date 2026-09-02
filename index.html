@@ -10,40 +10,66 @@
 
     <style>
         :root {
+            /* Базовые цвета светлой темы */
             --bg-color: #f6f8fa;
             --text-color: #24292e;
             --card-bg: white;
             --border-color: #e1e4e8;
-            --accent-color: #0969da;
             --secondary-text: #586069;
             --lesson-border: #eaecef;
             --tab-bg: #e1e4e8;
-            --tab-active: #0969da;
             --tab-text: #24292e;
             --tab-active-text: white;
             --btn-bg: #ffffff;
             --btn-border: #d0d7de;
-            --btn-active-bg: #0969da;
             --btn-active-text: #ffffff;
+
+            /* Акцентные цвета по умолчанию (Синий) */
+            --accent-color: #0969da;
+            --accent-gradient-start: #0969da;
+            --accent-gradient-end: #033d8b;
+
+            /* Привязка акцента к элементам */
+            --tab-active: var(--accent-color);
+            --btn-active-bg: var(--accent-color);
         }
 
         body.dark-theme {
+            /* Базовые цвета темной темы */
             --bg-color: #0d1117;
             --text-color: #c9d1d9;
             --card-bg: #161b22;
             --border-color: #30363d;
-            --accent-color: #58a6ff;
             --secondary-text: #8b949e;
             --lesson-border: #21262d;
             --tab-bg: #21262d;
-            --tab-active: #58a6ff;
             --tab-text: #c9d1d9;
             --tab-active-text: #0d1117;
             --btn-bg: #21262d;
             --btn-border: #30363d;
-            --btn-active-bg: #58a6ff;
             --btn-active-text: #0d1117;
+
+            /* Акцентные цвета по умолчанию для темной темы (Синий) */
+            --accent-color: #58a6ff;
+            --accent-gradient-start: #1f6feb;
+            --accent-gradient-end: #113d80;
         }
+
+        /* Цветовые темы (Красный) */
+        body[data-color="red"] { --accent-color: #cf222e; --accent-gradient-start: #cf222e; --accent-gradient-end: #a40e26; }
+        body.dark-theme[data-color="red"] { --accent-color: #ff7b72; --accent-gradient-start: #ff7b72; --accent-gradient-end: #b31d28; }
+
+        /* Цветовые темы (Зеленый) */
+        body[data-color="green"] { --accent-color: #1a7f37; --accent-gradient-start: #1a7f37; --accent-gradient-end: #115822; }
+        body.dark-theme[data-color="green"] { --accent-color: #3fb950; --accent-gradient-start: #3fb950; --accent-gradient-end: #238636; }
+
+        /* Цветовые темы (Желтый) */
+        body[data-color="yellow"] { --accent-color: #9a6700; --accent-gradient-start: #9a6700; --accent-gradient-end: #734c00; }
+        body.dark-theme[data-color="yellow"] { --accent-color: #d29922; --accent-gradient-start: #d29922; --accent-gradient-end: #9e6a03; }
+
+        /* Цветовые темы (Фиолетовый) */
+        body[data-color="purple"] { --accent-color: #8250df; --accent-gradient-start: #8250df; --accent-gradient-end: #5a32a3; }
+        body.dark-theme[data-color="purple"] { --accent-color: #bc8cff; --accent-gradient-start: #bc8cff; --accent-gradient-end: #8957e5; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -66,7 +92,7 @@
             gap: 15px;
         }
 
-        h1 { color: var(--accent-color); margin: 0; font-size: 1.8em; }
+        h1 { color: var(--accent-color); margin: 0; font-size: 1.8em; transition: color 0.3s; }
 
         .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
@@ -89,17 +115,44 @@
             border-color: var(--btn-active-bg);
         }
 
+        /* Выбор цвета */
+        .color-picker {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--btn-border);
+        }
+        .color-btn {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            padding: 0;
+        }
+        .color-btn:hover { transform: scale(1.2); }
+        .color-btn.active-color { box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 3px var(--accent-color); }
+        .color-btn.blue { background-color: #0969da; }
+        .color-btn.red { background-color: #cf222e; }
+        .color-btn.green { background-color: #1a7f37; }
+        .color-btn.yellow { background-color: #d29922; }
+        .color-btn.purple { background-color: #8250df; }
+
         .live-banner {
-            background: linear-gradient(135deg, #0969da, #033d8b);
+            background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
             color: white;
             border-radius: 10px;
             padding: 15px 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(9, 105, 218, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             animation: fadeIn 0.5s ease-in-out;
+            transition: background 0.3s;
         }
-        body.dark-theme .live-banner { background: linear-gradient(135deg, #1f6feb, #113d80); }
-        .live-banner .subject-info { color: #e6edf3; }
+        .live-banner .subject-info { color: rgba(255, 255, 255, 0.9); }
         .live-banner .chill-sleep { color: #7ee787; }
 
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
@@ -137,7 +190,7 @@
         
         .lesson { display: flex; flex-direction: column; padding: 10px 0; border-bottom: 1px solid var(--lesson-border); }
         .lesson:last-child { border-bottom: none; }
-        .time { font-weight: bold; color: var(--accent-color); margin-bottom: 5px; font-size: 1.1em; }
+        .time { font-weight: bold; color: var(--accent-color); margin-bottom: 5px; font-size: 1.1em; transition: color 0.3s; }
         .subject-info { color: var(--secondary-text); }
         .subject-title { font-weight: 600; color: var(--text-color); font-size: 1.05em; }
         .chill-sleep { color: #2ea043; font-weight: bold; font-style: italic; }
@@ -160,6 +213,16 @@
                 <button id="today-btn" class="btn" title="Вернуться к текущему дню и неделе">📅 Сегодня</button>
                 <button id="week-toggle" class="btn" title="Нажмите, чтобы сменить неделю">Загрузка недели...</button>
                 <button id="all-schedule-btn" class="btn" title="Показать всё расписание без фильтров">📋 Все пары</button>
+                
+                <!-- Палитра цветов -->
+                <div class="color-picker">
+                    <button class="color-btn blue" data-set-color="blue" title="Синий"></button>
+                    <button class="color-btn red" data-set-color="red" title="Красный"></button>
+                    <button class="color-btn green" data-set-color="green" title="Зеленый"></button>
+                    <button class="color-btn yellow" data-set-color="yellow" title="Желтый"></button>
+                    <button class="color-btn purple" data-set-color="purple" title="Фиолетовый"></button>
+                </div>
+
                 <button id="theme-toggle" class="btn">🌙</button>
             </div>
         </div>
@@ -421,7 +484,6 @@
             });
         }
 
-        // Кнопка переключения недель
         document.getElementById('week-toggle').addEventListener('click', () => {
             isAllScheduleMode = false;
             displayedWeekNum++;
@@ -430,13 +492,11 @@
             updateParityUI();
         });
 
-        // Кнопка "Все пары"
         document.getElementById('all-schedule-btn').addEventListener('click', () => {
             isAllScheduleMode = !isAllScheduleMode;
             updateParityUI();
         });
 
-        // Кнопка "Сегодня"
         document.getElementById('today-btn').addEventListener('click', () => {
             displayedWeekNum = currentRealWeekNum;
             displayedParity = currentRealParserParity;
@@ -482,6 +542,30 @@
                 themeToggle.textContent = '🌙';
             }
         });
+
+        const colorBtns = document.querySelectorAll('.color-btn');
+        const savedColor = localStorage.getItem('accent-color') || 'blue';
+
+        function setAccentColor(color) {
+            document.body.setAttribute('data-color', color);
+            localStorage.setItem('accent-color', color);
+            
+            colorBtns.forEach(btn => {
+                if (btn.getAttribute('data-set-color') === color) {
+                    btn.classList.add('active-color');
+                } else {
+                    btn.classList.remove('active-color');
+                }
+            });
+        }
+
+        colorBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setAccentColor(btn.getAttribute('data-set-color'));
+            });
+        });
+
+        setAccentColor(savedColor);
 
         function updateLiveStatus() {
             const now = new Date();
