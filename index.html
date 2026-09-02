@@ -110,24 +110,45 @@
         .btn:hover { opacity: 0.8; }
         
         .btn.active-mode {
-            background-color: var(--btn-active-bg);
-            color: var(--btn-active-text);
-            border-color: var(--btn-active-bg);
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border-color: var(--accent-color);
         }
 
-        /* Выбор цвета */
-        .color-picker {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            background: var(--card-bg);
-            padding: 6px 10px;
-            border-radius: 20px;
-            border: 1px solid var(--btn-border);
+        /* Выбор цвета (Шторка) */
+        .color-picker-wrapper {
+            position: relative;
+            display: inline-block;
         }
+
+        .color-picker-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--btn-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.25s ease-in-out;
+        }
+
+        .color-picker-dropdown.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
         .color-btn {
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             border: none;
             cursor: pointer;
@@ -169,7 +190,7 @@
             transition: 0.2s;
             white-space: nowrap;
         }
-        .tab-btn.active { background-color: var(--tab-active); color: var(--tab-active-text); }
+        .tab-btn.active { background-color: var(--accent-color); color: #ffffff; }
 
         .day-card {
             background: var(--card-bg);
@@ -214,13 +235,16 @@
                 <button id="week-toggle" class="btn" title="Нажмите, чтобы сменить неделю">Загрузка недели...</button>
                 <button id="all-schedule-btn" class="btn" title="Показать всё расписание без фильтров">📋 Все пары</button>
                 
-                <!-- Палитра цветов -->
-                <div class="color-picker">
-                    <button class="color-btn blue" data-set-color="blue" title="Синий"></button>
-                    <button class="color-btn red" data-set-color="red" title="Красный"></button>
-                    <button class="color-btn green" data-set-color="green" title="Зеленый"></button>
-                    <button class="color-btn yellow" data-set-color="yellow" title="Желтый"></button>
-                    <button class="color-btn purple" data-set-color="purple" title="Фиолетовый"></button>
+                <!-- Выпадающая шторка выбора цвета -->
+                <div class="color-picker-wrapper">
+                    <button id="color-menu-btn" class="btn" title="Выбрать цвет акцента">🎨</button>
+                    <div id="color-dropdown" class="color-picker-dropdown">
+                        <button class="color-btn blue" data-set-color="blue" title="Синий"></button>
+                        <button class="color-btn red" data-set-color="red" title="Красный"></button>
+                        <button class="color-btn green" data-set-color="green" title="Зеленый"></button>
+                        <button class="color-btn yellow" data-set-color="yellow" title="Желтый"></button>
+                        <button class="color-btn purple" data-set-color="purple" title="Фиолетовый"></button>
+                    </div>
                 </div>
 
                 <button id="theme-toggle" class="btn">🌙</button>
@@ -543,8 +567,23 @@
             }
         });
 
+        /* Логика выпадающей шторки выбора цвета */
+        const colorMenuBtn = document.getElementById('color-menu-btn');
+        const colorDropdown = document.getElementById('color-dropdown');
         const colorBtns = document.querySelectorAll('.color-btn');
         const savedColor = localStorage.getItem('accent-color') || 'blue';
+
+        colorMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            colorDropdown.classList.toggle('open');
+        });
+
+        // Закрытие шторки при клике вне её области
+        document.addEventListener('click', (e) => {
+            if (!colorDropdown.contains(e.target) && e.target !== colorMenuBtn) {
+                colorDropdown.classList.remove('open');
+            }
+        });
 
         function setAccentColor(color) {
             document.body.setAttribute('data-color', color);
@@ -562,6 +601,7 @@
         colorBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 setAccentColor(btn.getAttribute('data-set-color'));
+                colorDropdown.classList.remove('open'); // Закрываем шторку после выбора
             });
         });
 
