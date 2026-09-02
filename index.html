@@ -1,562 +1,567 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Моё расписание</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моё расписание</title>
+    
+    <!-- Иконка-эмодзи книжки для вкладки -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
 
-<!-- Иконка-эмодзи книжки для вкладки -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
+    <style>
+        :root {
+            --bg-color: #f6f8fa;
+            --text-color: #24292e;
+            --card-bg: white;
+            --border-color: #e1e4e8;
+            --accent-color: #0969da;
+            --secondary-text: #586069;
+            --lesson-border: #eaecef;
+            --tab-bg: #e1e4e8;
+            --tab-active: #0969da;
+            --tab-text: #24292e;
+            --tab-active-text: white;
+            --btn-bg: #ffffff;
+            --btn-border: #d0d7de;
+            --btn-active-bg: #0969da;
+            --btn-active-text: #ffffff;
+        }
 
-<style>
-:root {
---bg-color: #f6f8fa;
---text-color: #24292e;
---card-bg: white;
---border-color: #e1e4e8;
---accent-color: #0969da;
---secondary-text: #586069;
---lesson-border: #eaecef;
---tab-bg: #e1e4e8;
---tab-active: #0969da;
---tab-text: #24292e;
---tab-active-text: white;
---btn-bg: #ffffff;
---btn-border: #d0d7de;
---btn-active-bg: #0969da;
---btn-active-text: #ffffff;
-}
+        body.dark-theme {
+            --bg-color: #0d1117;
+            --text-color: #c9d1d9;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --accent-color: #58a6ff;
+            --secondary-text: #8b949e;
+            --lesson-border: #21262d;
+            --tab-bg: #21262d;
+            --tab-active: #58a6ff;
+            --tab-text: #c9d1d9;
+            --tab-active-text: #0d1117;
+            --btn-bg: #21262d;
+            --btn-border: #30363d;
+            --btn-active-bg: #58a6ff;
+            --btn-active-text: #0d1117;
+        }
 
-body.dark-theme {
---bg-color: #0d1117;
---text-color: #c9d1d9;
---card-bg: #161b22;
---border-color: #30363d;
---accent-color: #58a6ff;
---secondary-text: #8b949e;
---lesson-border: #21262d;
---tab-bg: #21262d;
---tab-active: #58a6ff;
---tab-text: #c9d1d9;
---tab-active-text: #0d1117;
---btn-bg: #21262d;
---btn-border: #30363d;
---btn-active-bg: #58a6ff;
---btn-active-text: #0d1117;
-}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .container { max-width: 800px; margin: 0 auto; }
 
-body {
-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-background-color: var(--bg-color);
-color: var(--text-color);
-margin: 0;
-padding: 20px;
-line-height: 1.5;
-transition: background-color 0.3s, color 0.3s;
-}
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
 
-.container { max-width: 800px; margin: 0 auto; }
+        h1 { color: var(--accent-color); margin: 0; font-size: 1.8em; }
 
-.header {
-display: flex;
-justify-content: space-between;
-align-items: center;
-margin-bottom: 20px;
-flex-wrap: wrap;
-gap: 15px;
-}
+        .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-h1 { color: var(--accent-color); margin: 0; font-size: 1.8em; }
+        .btn {
+            background-color: var(--btn-bg);
+            color: var(--text-color);
+            border: 1px solid var(--btn-border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .btn:hover { opacity: 0.8; }
+        
+        .btn.active-mode {
+            background-color: var(--btn-active-bg);
+            color: var(--btn-active-text);
+            border-color: var(--btn-active-bg);
+        }
 
-.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .live-banner {
+            background: linear-gradient(135deg, #0969da, #033d8b);
+            color: white;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(9, 105, 218, 0.3);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        body.dark-theme .live-banner { background: linear-gradient(135deg, #1f6feb, #113d80); }
+        .live-banner .subject-info { color: #e6edf3; }
+        .live-banner .chill-sleep { color: #7ee787; }
 
-.btn {
-background-color: var(--btn-bg);
-color: var(--text-color);
-border: 1px solid var(--btn-border);
-padding: 8px 12px;
-border-radius: 6px;
-cursor: pointer;
-font-size: 0.9em;
-font-weight: 600;
-transition: 0.2s;
-}
-.btn:hover { opacity: 0.8; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
 
-.btn.active-mode {
-background-color: var(--btn-active-bg);
-color: var(--btn-active-text);
-border-color: var(--btn-active-bg);
-}
+        .tab-btn {
+            background-color: var(--tab-bg);
+            color: var(--tab-text);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .tab-btn.active { background-color: var(--tab-active); color: var(--tab-active-text); }
 
-.live-banner {
-background: linear-gradient(135deg, #0969da, #033d8b);
-color: white;
-border-radius: 10px;
-padding: 15px 20px;
-margin-bottom: 20px;
-box-shadow: 0 4px 12px rgba(9, 105, 218, 0.3);
-animation: fadeIn 0.5s ease-in-out;
-}
-body.dark-theme .live-banner { background: linear-gradient(135deg, #1f6feb, #113d80); }
-.live-banner .subject-info { color: #e6edf3; }
-.live-banner .chill-sleep { color: #7ee787; }
+        .day-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
 
-.tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-.tab-btn {
-background-color: var(--tab-bg);
-color: var(--tab-text);
-border: none;
-padding: 10px 16px;
-border-radius: 8px;
-font-size: 1em;
-font-weight: bold;
-cursor: pointer;
-transition: 0.2s;
-white-space: nowrap;
-}
-.tab-btn.active { background-color: var(--tab-active); color: var(--tab-active-text); }
+        .day-title {
+            font-size: 1.5em; color: var(--text-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px; margin-top: 0; margin-bottom: 15px;
+        }
+        
+        .lesson { display: flex; flex-direction: column; padding: 10px 0; border-bottom: 1px solid var(--lesson-border); }
+        .lesson:last-child { border-bottom: none; }
+        .time { font-weight: bold; color: var(--accent-color); margin-bottom: 5px; font-size: 1.1em; }
+        .subject-info { color: var(--secondary-text); }
+        .subject-title { font-weight: 600; color: var(--text-color); font-size: 1.05em; }
+        .chill-sleep { color: #2ea043; font-weight: bold; font-style: italic; }
+        .window-slot { color: #8250df; font-weight: bold; }
+        
+        .hidden-lesson { display: none !important; }
 
-.day-card {
-background: var(--card-bg);
-border-radius: 10px;
-padding: 20px;
-box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-display: none;
-animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-.day-title {
-font-size: 1.5em; color: var(--text-color);
-border-bottom: 2px solid var(--border-color);
-padding-bottom: 10px; margin-top: 0; margin-bottom: 15px;
-}
-
-.lesson { display: flex; flex-direction: column; padding: 10px 0; border-bottom: 1px solid var(--lesson-border); }
-.lesson:last-child { border-bottom: none; }
-.time { font-weight: bold; color: var(--accent-color); margin-bottom: 5px; font-size: 1.1em; }
-.subject-info { color: var(--secondary-text); }
-.subject-title { font-weight: 600; color: var(--text-color); font-size: 1.05em; }
-.chill-sleep { color: #2ea043; font-weight: bold; font-style: italic; }
-
-.hidden-lesson { display: none !important; }
-
-@media (min-width: 600px) {
-.lesson { flex-direction: row; align-items: flex-start; }
-.time { min-width: 130px; margin-bottom: 0; }
-}
-</style>
+        @media (min-width: 600px) {
+            .lesson { flex-direction: row; align-items: flex-start; }
+            .time { min-width: 130px; margin-bottom: 0; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
+    <div class="container">
+        
+        <div class="header">
+            <h1>🎓 Расписание</h1>
+            <div class="controls">
+                <button id="today-btn" class="btn" title="Вернуться к текущему дню и неделе">📅 Сегодня</button>
+                <button id="week-toggle" class="btn" title="Нажмите, чтобы сменить неделю">Загрузка недели...</button>
+                <button id="all-schedule-btn" class="btn" title="Показать всё расписание без фильтров">📋 Все пары</button>
+                <button id="theme-toggle" class="btn">🌙</button>
+            </div>
+        </div>
 
-<div class="header">
-<h1>🎓 Расписание</h1>
-<div class="controls">
-<button id="today-btn" class="btn" title="Вернуться к текущему дню и неделе">📅 Сегодня</button>
-<button id="week-toggle" class="btn" title="Нажмите, чтобы сменить неделю">Загрузка недели...</button>
-<button id="all-schedule-btn" class="btn" title="Показать всё расписание без фильтров">📋 Все пары</button>
-<button id="theme-toggle" class="btn">🌙</button>
-</div>
-</div>
+        <div id="live-banner" class="live-banner"></div>
 
-<div id="live-banner" class="live-banner"></div>
+        <!-- Навигация по дням -->
+        <div class="tabs">
+            <button class="tab-btn" data-day="monday" onclick="showDay('monday', this)">Пн</button>
+            <button class="tab-btn" data-day="tuesday" onclick="showDay('tuesday', this)">Вт</button>
+            <button class="tab-btn" data-day="wednesday" onclick="showDay('wednesday', this)">Ср</button>
+            <button class="tab-btn" data-day="thursday" onclick="showDay('thursday', this)">Чт</button>
+            <button class="tab-btn" data-day="friday" onclick="showDay('friday', this)">Пт</button>
+            <button class="tab-btn" data-day="saturday" onclick="showDay('saturday', this)">Сб</button>
+        </div>
 
-<!-- Навигация по дням -->
-<div class="tabs">
-<button class="tab-btn" data-day="monday" onclick="showDay('monday', this)">Пн</button>
-<button class="tab-btn" data-day="tuesday" onclick="showDay('tuesday', this)">Вт</button>
-<button class="tab-btn" data-day="wednesday" onclick="showDay('wednesday', this)">Ср</button>
-<button class="tab-btn" data-day="thursday" onclick="showDay('thursday', this)">Чт</button>
-<button class="tab-btn" data-day="friday" onclick="showDay('friday', this)">Пт</button>
-<button class="tab-btn" data-day="saturday" onclick="showDay('saturday', this)">Сб</button>
-</div>
+        <!-- Понедельник -->
+        <div id="monday" class="day-card">
+            <h2 class="day-title">Понедельник</h2>
+            <div class="lesson" data-start-week="1" data-end-week="9">
+                <div class="time">8.30 - 10.00</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-9 нед.) Инновационная экономика и технологическое предпринимательство</div>
+                    Сафина Л.М., ауд. 109 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson" data-start-week="10" data-end-week="18">
+                <div class="time">8.30 - 10.00</div>
+                <div class="subject-info">
+                    <div class="subject-title">(10-18 нед.) Теория алгоритмов и анализ сложности</div>
+                    Сафина Л.И., ауд. 109 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson">
+                <div class="time">10.10 - 11.40</div>
+                <div class="subject-info window-slot">🪟 Окно</div>
+            </div>
+            <div class="lesson" data-parity="odd" data-start-week="1" data-end-week="17">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(н/н 1-17 нед.) Современные графические редакторы</div>
+                    Хафизова А.Д., ауд. 1112 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(ч/н 2-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
+                    Мухтарова Т.М., ауд. 802 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson" data-start-week="1" data-end-week="17">
+                <div class="time">13.50 - 15.20</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-17 неделя) Элективные курсы по физической культуре и спорту</div>
+                    КСК КФУ ауд. УНИКС (Проф.Нужина 2/27).
+                </div>
+            </div>
+            <div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
+                <div class="time">15.50 - 17.20</div>
+                <div class="subject-info">
+                    <div class="subject-title">(ч/н 2-18 нед.) Технологическая (проектно-технологическая) практика</div>
+                    Еникеева А.И., ауд. 1111 (Кремл.35)
+                </div>
+            </div>
+        </div>
 
-<!-- Понедельник -->
-<div id="monday" class="day-card">
-<h2 class="day-title">Понедельник</h2>
-<div class="lesson" data-start-week="1" data-end-week="9">
-<div class="time">8.30 - 10.00</div>
-<div class="subject-info">
-<div class="subject-title">(1-9 нед.) Инновационная экономика и технологическое предпринимательство</div>
-Сафина Л.М., ауд. 109 (Кремл. 35)
-</div>
-</div>
-<div class="lesson" data-start-week="10" data-end-week="18">
-<div class="time">8.30 - 10.00</div>
-<div class="subject-info">
-<div class="subject-title">(10-18 нед.) Теория алгоритмов и анализ сложности</div>
-Сафина Л.И., ауд. 109 (Кремл. 35)
-</div>
-</div>
-<div class="lesson">
-<div class="time">10.10 - 11.40</div>
-<div class="subject-info chill-sleep">💤 Sleep...</div>
-</div>
-<div class="lesson" data-parity="odd" data-start-week="1" data-end-week="17">
-<div class="time">12.10 - 13.40</div>
-<div class="subject-info">
-<div class="subject-title">(н/н 1-17 нед.) Современные графические редакторы</div>
-Хафизова А.Д., ауд. 1112 (Кремл. 35)
-</div>
-</div>
-<div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
-<div class="time">12.10 - 13.40</div>
-<div class="subject-info">
-<div class="subject-title">(ч/н 2-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
-Мухтарова Т.М., ауд. 802 (Кремл. 35)
-</div>
-</div>
-<div class="lesson" data-start-week="1" data-end-week="17">
-<div class="time">14.00 - 15.30</div>
-<div class="subject-info">
-<div class="subject-title">(1-17 неделя) Элективные курсы по физической культуре и спорту</div>
-КСК КФУ ауд. УНИКС (Проф.Нужина 2/27).
-</div>
-</div>
-<div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
-<div class="time">15.50 - 17.20</div>
-<div class="subject-info">
-<div class="subject-title">(ч/н 2-18 нед.) Технологическая (проектно-технологическая) практика</div>
-Еникеева А.И., ауд. 1111 (Кремл.35)
-</div>
-</div>
-</div>
+        <!-- Вторник -->
+        <div id="tuesday" class="day-card">
+            <h2 class="day-title">Вторник</h2>
+            <div class="lesson" data-start-week="1" data-end-week="18">
+                <div class="time">8.30 - 10.00</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Иностранный язык</div>
+                    Яруллина Д.А. ауд. 409; Маршева Т.В. ауд. 511; Хованская Е.С. ауд. 309Б; Айметдинов А.Р. ауд. 507
+                </div>
+            </div>
+            <div class="lesson" data-start-week="1" data-end-week="18">
+                <div class="time">10.10 - 11.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
+                    Мухтарова Т.М., ауд. 811 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson" data-start-week="1" data-end-week="18">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Теория алгоритмов и анализ сложности</div>
+                    Ахметшина Д.И., ауд. 1112 (Кремл. 35)
+                </div>
+            </div>
+        </div>
 
-<!-- Вторник -->
-<div id="tuesday" class="day-card">
-<h2 class="day-title">Вторник</h2>
-<div class="lesson" data-start-week="1" data-end-week="18">
-<div class="time">8.30 - 10.00</div>
-<div class="subject-info">
-<div class="subject-title">(1-18 нед.) Иностранный язык</div>
-Яруллина Д.А. ауд. 409; Маршева Т.В. ауд. 511; Хованская Е.С. ауд. 309Б; Айметдинов А.Р. ауд. 507
-</div>
-</div>
-<div class="lesson" data-start-week="1" data-end-week="18">
-<div class="time">10.10 - 11.40</div>
-<div class="subject-info">
-<div class="subject-title">(1-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
-Мухтарова Т.М., ауд. 811 (Кремл. 35)
-</div>
-</div>
-<div class="lesson" data-start-week="1" data-end-week="18">
-<div class="time">12.10 - 13.40</div>
-<div class="subject-info">
-<div class="subject-title">(1-18 нед.) Теория алгоритмов и анализ сложности</div>
-Ахметшина Д.И., ауд. 1112 (Кремл. 35)
-</div>
-</div>
-</div>
+        <!-- Среда -->
+        <div id="wednesday" class="day-card">
+            <h2 class="day-title">Среда</h2>
+            <div class="lesson">
+                <div class="time">8.30 - 10.00</div>
+                <div class="subject-info window-slot">🪟 Окно</div>
+            </div>
+            <div class="lesson" data-start-week="1" data-end-week="18">
+                <div class="time">10.10 - 11.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Базы данных</div>
+                    Еникеев И.А., ауд. 811 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(ч/н 2-18 нед.) Инновационная экономика и технологическое предпринимательство</div>
+                    Шавалеева Ч.М., ауд. 1010 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson" data-parity="odd" data-start-week="1" data-end-week="17">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info window-slot">🪟 Окно (в нечетную неделю)</div>
+            </div>
+            <div class="lesson" data-start-week="1" data-end-week="18">
+                <div class="time">13.50 - 15.20</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Основы дизайна и проектирования программного обеспечения</div>
+                    Кузнецова И.С., ауд. 1111 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
+                <div class="time">15.50 - 17.20</div>
+                <div class="subject-info">
+                    <div class="subject-title">(ч/н 2-18 нед.) Теория алгоритмов и анализ сложности</div>
+                    Сафина Л.И., ауд. 218 (Кремл. 35)
+                </div>
+            </div>
+        </div>
 
-<!-- Среда -->
-<div id="wednesday" class="day-card">
-<h2 class="day-title">Среда</h2>
-<div class="lesson">
-<div class="time">8.30 - 10.00</div>
-<div class="subject-info chill-sleep">💤 Sleep...</div>
-</div>
-<div class="lesson" data-start-week="1" data-end-week="18">
-<div class="time">10.10 - 11.40</div>
-<div class="subject-info">
-<div class="subject-title">(1-18 нед.) Базы данных</div>
-Еникеев И.А., ауд. 811 (Кремл. 35)
-</div>
-</div>
-<div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
-<div class="time">12.10 - 13.40</div>
-<div class="subject-info">
-<div class="subject-title">(ч/н 2-18 нед.) Инновационная экономика и технологическое предпринимательство</div>
-Шавалеева Ч.М., ауд. 1010 (Кремл. 35)
-</div>
-</div>
-<div class="lesson" data-start-week="1" data-end-week="18">
-<div class="time">13.50 - 15.20</div>
-<div class="subject-info">
-<div class="subject-title">(1-18 нед.) Основы дизайна и проектирования программного обеспечения</div>
-Кузнецова И.С., ауд. 1111 (Кремл. 35)
-</div>
-</div>
-<div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
-<div class="time">15.50 - 17.20</div>
-<div class="subject-info">
-<div class="subject-title">(ч/н 2-18 нед.) Теория алгоритмов и анализ сложности</div>
-Сафина Л.И., ауд. 218 (Кремл. 35)
-</div>
-</div>
-</div>
+        <!-- Четверг -->
+        <div id="thursday" class="day-card">
+            <h2 class="day-title">Четверг</h2>
+            <div class="lesson" data-start-week="1" data-end-week="18">
+                <div class="time">13.50 - 15.20</div>
+                <div class="subject-info">
+                    <div class="subject-title">Элективные курсы по физической культуре и спорту</div>
+                    КСК КФУ ауд. УНИКС (Проф.Нужина 2/27).
+                </div>
+            </div>
+            <div class="lesson" data-start-week="1" data-end-week="18">
+                <div class="time">19.10 - 20.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Основы дизайна и проектирования программного обеспечения</div>
+                    Кузнецова И.С. — лекция в формате ЭОР.
+                </div>
+            </div>
+        </div>
 
-<!-- Четверг -->
-<div id="thursday" class="day-card">
-<h2 class="day-title">Четверг</h2>
-<div class="lesson" data-start-week="1" data-end-week="18">
-<div class="time">13.50 - 15.20</div>
-<div class="subject-info">
-<div class="subject-title">Элективные курсы по физической культуре и спорту</div>
-КСК КФУ ауд. УНИКС (Проф.Нужина 2/27).
-</div>
-</div>
-<div class="lesson" data-start-week="1" data-end-week="18">
-<div class="time">19.10 - 20.40</div>
-<div class="subject-info">
-<div class="subject-title">(1-18 нед.) Основы дизайна и проектирования программного обеспечения</div>
-Кузнецова И.С. — лекция в формате ЭОР.
-</div>
-</div>
-</div>
+        <!-- Пятница -->
+        <div id="friday" class="day-card">
+            <h2 class="day-title">Пятница</h2>
+            <div class="lesson" style="flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 20px 0;">
+                <div class="time" style="font-size: 1.3em;">Весь день</div>
+                <div class="subject-info chill-sleep" style="font-size: 1.2em;">🏖️ Chill...</div>
+                <img src="cheers.gif" alt="Cheers Dwight Manfredi" style="max-width: 100%; width: 320px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            </div>
+        </div>
 
-<!-- Пятница -->
-<div id="friday" class="day-card">
-<h2 class="day-title">Пятница</h2>
-<div class="lesson">
-<div class="time">Весь день</div>
-<div class="subject-info chill-sleep">🏖️ Chill...</div>
-<img src="cheers.gif" alt="Cheers Dwight Manfredi" style="max-width: 100%; width: 320px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-</div>
-</div>
+        <!-- Суббота -->
+        <div id="saturday" class="day-card">
+            <h2 class="day-title">Суббота</h2>
+            <div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
+                <div class="time">8.30 - 10.00</div>
+                <div class="subject-info">
+                    <div class="subject-title">(ч/н 2-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
+                    Яруллин Р.С., ауд. 216 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson" data-start-week="1" data-end-week="18">
+                <div class="time">10.10 - 11.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(1-18 нед.) Базы данных</div>
+                    Еникеев И.А., ауд. 218 (Кремл. 35)
+                </div>
+            </div>
+            <div class="lesson" data-parity="odd" data-start-week="1" data-end-week="17">
+                <div class="time">12.10 - 13.40</div>
+                <div class="subject-info">
+                    <div class="subject-title">(н/н 1-17 нед.) Базы данных</div>
+                    Еникеев И.А., ауд 809 (Кремл. 35)
+                </div>
+            </div>
+        </div>
 
-<!-- Суббота -->
-<div id="saturday" class="day-card">
-<h2 class="day-title">Суббота</h2>
-<div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
-<div class="time">8.30 - 10.00</div>
-<div class="subject-info">
-<div class="subject-title">(ч/н 2-18 нед.) Современные подходы в объектно-ориентированном программировании</div>
-Яруллин Р.С., ауд. 216 (Кремл. 35)
-</div>
-</div>
-<div class="lesson" data-start-week="1" data-end-week="18">
-<div class="time">10.10 - 11.40</div>
-<div class="subject-info">
-<div class="subject-title">(1-18 нед.) Базы данных</div>
-Еникеев И.А., ауд. 218 (Кремл. 35)
-</div>
-</div>
-<div class="lesson" data-parity="odd" data-start-week="1" data-end-week="17">
-<div class="time">12.10 - 13.40</div>
-<div class="subject-info">
-<div class="subject-title">(н/н 1-17 нед.) Базы данных</div>
-Еникеев И.А., ауд 809 (Кремл. 35)
-</div>
-</div>
-</div>
+    </div>
 
-</div>
+    <script>
+        let currentRealWeekNum = 1;
+        let currentRealParserParity = 'odd';
+        let displayedWeekNum = 1;
+        let displayedParity = 'odd';
+        let isAllScheduleMode = false;
 
-<script>
-let currentRealWeekNum = 1;
-let currentRealParserParity = 'odd';
-let displayedWeekNum = 1;
-let displayedParity = 'odd';
-let isAllScheduleMode = false;
+        function initWeekData() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const mskDate = new Date(utc + (3600000 * 3));
+            
+            const startOfSemester = new Date(2026, 8, 1); // 1 сентября 2026
+            
+            const diffTime = mskDate.getTime() - startOfSemester.getTime();
+            let currentWeekNum = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+            
+            if (currentWeekNum < 1) currentWeekNum = 1;
+            
+            currentRealWeekNum = currentWeekNum;
+            currentRealParserParity = (currentWeekNum % 2 !== 0) ? 'odd' : 'even';
+            
+            displayedWeekNum = currentRealWeekNum;
+            displayedParity = currentRealParserParity;
+        }
 
-function initWeekData() {
-const now = new Date();
-const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-const mskDate = new Date(utc + (3600000 * 3));
+        function updateParityUI() {
+            const weekToggle = document.getElementById('week-toggle');
+            const allBtn = document.getElementById('all-schedule-btn');
 
-const startOfSemester = new Date(2026, 8, 1); // 1 сентября 2026
+            if (isAllScheduleMode) {
+                allBtn.classList.add('active-mode');
+                weekToggle.style.opacity = '0.5';
+            } else {
+                allBtn.classList.remove('active-mode');
+                weekToggle.style.opacity = '1';
+                
+                const isCurrent = (displayedWeekNum === currentRealWeekNum) ? ' (Текущая)' : '';
+                const parityName = (displayedParity === 'odd') ? 'Нечетная' : 'Четная';
+                weekToggle.textContent = `${displayedWeekNum} нед. (${parityName})${isCurrent}`;
+            }
 
-const diffTime = mskDate.getTime() - startOfSemester.getTime();
-let currentWeekNum = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+            document.querySelectorAll('.lesson').forEach(lesson => {
+                if (isAllScheduleMode) {
+                    lesson.classList.remove('hidden-lesson');
+                    return;
+                }
 
-if (currentWeekNum < 1) currentWeekNum = 1;
+                const p = lesson.getAttribute('data-parity');
+                const startW = parseInt(lesson.getAttribute('data-start-week')) || 1;
+                const endW = parseInt(lesson.getAttribute('data-end-week')) || 18;
+                
+                let hide = false;
 
-currentRealWeekNum = currentWeekNum;
-currentRealParserParity = (currentWeekNum % 2 !== 0) ? 'odd' : 'even';
+                if (displayedWeekNum < startW || displayedWeekNum > endW) {
+                    hide = true;
+                }
 
-displayedWeekNum = currentRealWeekNum;
-displayedParity = currentRealParserParity;
-}
+                if (p && p !== displayedParity) {
+                    hide = true;
+                }
 
-function updateParityUI() {
-const weekToggle = document.getElementById('week-toggle');
-const allBtn = document.getElementById('all-schedule-btn');
+                if (hide) {
+                    lesson.classList.add('hidden-lesson');
+                } else {
+                    lesson.classList.remove('hidden-lesson');
+                }
+            });
+        }
 
-if (isAllScheduleMode) {
-allBtn.classList.add('active-mode');
-weekToggle.style.opacity = '0.5';
-} else {
-allBtn.classList.remove('active-mode');
-weekToggle.style.opacity = '1';
+        // Кнопка переключения недель
+        document.getElementById('week-toggle').addEventListener('click', () => {
+            isAllScheduleMode = false;
+            displayedWeekNum++;
+            if (displayedWeekNum > 18) displayedWeekNum = 1;
+            displayedParity = (displayedWeekNum % 2 !== 0) ? 'odd' : 'even';
+            updateParityUI();
+        });
 
-const isCurrent = (displayedWeekNum === currentRealWeekNum) ? ' (Текущая)' : '';
-const parityName = (displayedParity === 'odd') ? 'Нечетная' : 'Четная';
-weekToggle.textContent = `${displayedWeekNum} нед. (${parityName})${isCurrent}`;
-}
+        // Кнопка "Все пары"
+        document.getElementById('all-schedule-btn').addEventListener('click', () => {
+            isAllScheduleMode = !isAllScheduleMode;
+            updateParityUI();
+        });
 
-document.querySelectorAll('.lesson').forEach(lesson => {
-if (isAllScheduleMode) {
-lesson.classList.remove('hidden-lesson');
-return;
-}
+        // Кнопка "Сегодня"
+        document.getElementById('today-btn').addEventListener('click', () => {
+            displayedWeekNum = currentRealWeekNum;
+            displayedParity = currentRealParserParity;
+            isAllScheduleMode = false;
+            updateParityUI();
 
-const p = lesson.getAttribute('data-parity');
-const startW = parseInt(lesson.getAttribute('data-start-week')) || 1;
-const endW = parseInt(lesson.getAttribute('data-end-week')) || 18;
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const mskDate = new Date(utc + (3600000 * 3));
+            let currentDayId = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][mskDate.getDay()];
+            if (currentDayId === 'sunday') currentDayId = 'monday';
 
-let hide = false;
+            const btn = document.querySelector(`.tab-btn[data-day="${currentDayId}"]`);
+            showDay(currentDayId, btn);
+        });
 
-if (displayedWeekNum < startW || displayedWeekNum > endW) {
-hide = true;
-}
+        function showDay(dayId, btnElement) {
+            const cards = document.querySelectorAll('.day-card');
+            cards.forEach(card => card.style.display = 'none');
 
-if (p && p !== displayedParity) {
-hide = true;
-}
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(btn => btn.classList.remove('active'));
 
-if (hide) {
-lesson.classList.add('hidden-lesson');
-} else {
-lesson.classList.remove('hidden-lesson');
-}
-});
-}
+            document.getElementById(dayId).style.display = 'block';
+            if (btnElement) btnElement.classList.add('active');
+        }
 
-// Кнопка переключения недель
-document.getElementById('week-toggle').addEventListener('click', () => {
-isAllScheduleMode = false;
-displayedWeekNum++;
-if (displayedWeekNum > 18) displayedWeekNum = 1;
-displayedParity = (displayedWeekNum % 2 !== 0) ? 'odd' : 'even';
-updateParityUI();
-});
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-theme');
+            themeToggle.textContent = '☀️';
+        }
 
-// Кнопка "Все пары"
-document.getElementById('all-schedule-btn').addEventListener('click', () => {
-isAllScheduleMode = !isAllScheduleMode;
-updateParityUI();
-});
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            if (body.classList.contains('dark-theme')) {
+                localStorage.setItem('theme', 'dark');
+                themeToggle.textContent = '☀️';
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeToggle.textContent = '🌙';
+            }
+        });
 
-// Кнопка "Сегодня"
-document.getElementById('today-btn').addEventListener('click', () => {
-displayedWeekNum = currentRealWeekNum;
-displayedParity = currentRealParserParity;
-isAllScheduleMode = false;
-updateParityUI();
+        function updateLiveStatus() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const mskDate = new Date(utc + (3600000 * 3));
+            
+            const dayIdx = mskDate.getDay();
+            const hours = mskDate.getHours();
+            const minutes = mskDate.getMinutes();
+            const currentMins = hours * 60 + minutes;
+            const timeStr = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+            
+            const daysMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const currentDayId = daysMap[dayIdx];
+            const banner = document.getElementById('live-banner');
+            
+            if (currentDayId === 'sunday') {
+                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Сегодня воскресенье, пар нет. Отдыхаем! 🎉`;
+                return;
+            }
+            if (currentDayId === 'friday') {
+                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Пятница! 🏖️ Chill...`;
+                return;
+            }
 
-const now = new Date();
-const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-const mskDate = new Date(utc + (3600000 * 3));
-let currentDayId = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][mskDate.getDay()];
-if (currentDayId === 'sunday') currentDayId = 'monday';
+            const dayCard = document.getElementById(currentDayId);
+            if (!dayCard) return;
 
-const btn = document.querySelector(`.tab-btn[data-day="${currentDayId}"]`);
-showDay(currentDayId, btn);
-});
+            const lessons = dayCard.querySelectorAll('.lesson');
+            let activeLessonFound = false;
 
-function showDay(dayId, btnElement) {
-const cards = document.querySelectorAll('.day-card');
-cards.forEach(card => card.style.display = 'none');
+            lessons.forEach(lesson => {
+                const p = lesson.getAttribute('data-parity');
+                const startW = parseInt(lesson.getAttribute('data-start-week')) || 1;
+                const endW = parseInt(lesson.getAttribute('data-end-week')) || 18;
 
-const btns = document.querySelectorAll('.tab-btn');
-btns.forEach(btn => btn.classList.remove('active'));
+                if (currentRealWeekNum < startW || currentRealWeekNum > endW) return;
+                if (p && p !== currentRealParserParity) return;
 
-document.getElementById(dayId).style.display = 'block';
-if (btnElement) btnElement.classList.add('active');
-}
+                const timeText = lesson.querySelector('.time').innerText;
+                const timeMatch = timeText.match(/(\d{1,2})[.:](\d{2})\s*-\s*(\d{1,2})[.:](\d{2})/);
+                
+                if (timeMatch) {
+                    const startMins = parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2]);
+                    const endMins = parseInt(timeMatch[3]) * 60 + parseInt(timeMatch[4]);
+                    
+                    if (currentMins >= startMins && currentMins <= endMins) {
+                        activeLessonFound = true;
+                        const timeLeft = endMins - currentMins;
+                        const subjectHTML = lesson.querySelector('.subject-info').innerHTML;
+                        
+                        banner.innerHTML = `
+                            <div style="margin-bottom: 6px;"><strong>🕒 ${timeStr} (МСК) — Идёт пара (осталось ${timeLeft} мин.):</strong></div>
+                            <div class="subject-info">${subjectHTML}</div>
+                        `;
+                    }
+                }
+            });
 
-const themeToggle = document.getElementById('theme-toggle');
-const body = document.body;
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'dark') {
-body.classList.add('dark-theme');
-themeToggle.textContent = '☀️';
-}
+            if (!activeLessonFound) {
+                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Сейчас пар нет или идет перемена.`;
+            }
+        }
 
-themeToggle.addEventListener('click', () => {
-body.classList.toggle('dark-theme');
-if (body.classList.contains('dark-theme')) {
-localStorage.setItem('theme', 'dark');
-themeToggle.textContent = '☀️';
-} else {
-localStorage.setItem('theme', 'light');
-themeToggle.textContent = '🌙';
-}
-});
+        window.onload = () => {
+            initWeekData();
+            updateParityUI();
 
-function updateLiveStatus() {
-const now = new Date();
-const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-const mskDate = new Date(utc + (3600000 * 3));
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const mskDate = new Date(utc + (3600000 * 3));
+            let currentDayId = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][mskDate.getDay()];
+            if (currentDayId === 'sunday') currentDayId = 'monday';
 
-const dayIdx = mskDate.getDay();
-const hours = mskDate.getHours();
-const minutes = mskDate.getMinutes();
-const currentMins = hours * 60 + minutes;
-const timeStr = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+            const btn = document.querySelector(`.tab-btn[data-day="${currentDayId}"]`);
+            showDay(currentDayId, btn);
 
-const daysMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-const currentDayId = daysMap[dayIdx];
-const banner = document.getElementById('live-banner');
-
-if (currentDayId === 'sunday') {
-banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Сегодня воскресенье, пар нет. Отдыхаем! 🎉`;
-return;
-}
-if (currentDayId === 'friday') {
-banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Пятница! 🏖️ Chill...`;
-return;
-}
-
-const dayCard = document.getElementById(currentDayId);
-if (!dayCard) return;
-
-const lessons = dayCard.querySelectorAll('.lesson');
-let activeLessonFound = false;
-
-lessons.forEach(lesson => {
-const p = lesson.getAttribute('data-parity');
-const startW = parseInt(lesson.getAttribute('data-start-week')) || 1;
-const endW = parseInt(lesson.getAttribute('data-end-week')) || 18;
-
-if (currentRealWeekNum < startW || currentRealWeekNum > endW) return;
-if (p && p !== currentRealParserParity) return;
-
-const timeText = lesson.querySelector('.time').innerText;
-const timeMatch = timeText.match(/(\d{1,2})[.:](\d{2})\s*-\s*(\d{1,2})[.:](\d{2})/);
-
-if (timeMatch) {
-const startMins = parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2]);
-const endMins = parseInt(timeMatch[3]) * 60 + parseInt(timeMatch[4]);
-
-if (currentMins >= startMins && currentMins <= endMins) {
-activeLessonFound = true;
-const timeLeft = endMins - currentMins;
-const subjectHTML = lesson.querySelector('.subject-info').innerHTML;
-
-banner.innerHTML = `
-<div style="margin-bottom: 6px;"><strong>🕒 ${timeStr} (МСК) — Идёт пара (осталось ${timeLeft} мин.):</strong></div>
-<div class="subject-info">${subjectHTML}</div>
-`;
-}
-}
-});
-
-if (!activeLessonFound) {
-banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Сейчас пар нет или идет перемена.`;
-}
-}
-
-window.onload = () => {
-initWeekData();
-updateParityUI();
-
-const now = new Date();
-const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-const mskDate = new Date(utc + (3600000 * 3));
-let currentDayId = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][mskDate.getDay()];
-if (currentDayId === 'sunday') currentDayId = 'monday';
-
-const btn = document.querySelector(`.tab-btn[data-day="${currentDayId}"]`);
-showDay(currentDayId, btn);
-
-updateLiveStatus();
-setInterval(updateLiveStatus, 10000);
-};
-</script>
+            updateLiveStatus();
+            setInterval(updateLiveStatus, 10000);
+        };
+    </script>
 </body>
 </html>
