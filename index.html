@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Моё расписание</title>
     
-    <!-- Иконка-эмодзи книжки для вкладки -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
 
     <style>
@@ -115,7 +114,7 @@
             border-color: var(--accent-color);
         }
 
-        /* Выбор цвета (Шторка) */
+        /* Выбор цвета (Шторка с крупными кнопками) */
         .color-picker-wrapper {
             position: relative;
             display: inline-block;
@@ -126,12 +125,12 @@
             top: calc(100% + 8px);
             right: 0;
             background: var(--card-bg);
-            padding: 10px;
-            border-radius: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
             border: 1px solid var(--btn-border);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
             z-index: 100;
             opacity: 0;
@@ -147,16 +146,16 @@
         }
 
         .color-btn {
-            width: 20px;
-            height: 20px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             border: none;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             padding: 0;
         }
-        .color-btn:hover { transform: scale(1.2); }
-        .color-btn.active-color { box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 3px var(--accent-color); }
+        .color-btn:hover { transform: scale(1.15); }
+        .color-btn.active-color { box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 4px var(--accent-color); }
         .color-btn.blue { background-color: #0969da; }
         .color-btn.red { background-color: #cf222e; }
         .color-btn.green { background-color: #1a7f37; }
@@ -235,7 +234,6 @@
                 <button id="week-toggle" class="btn" title="Нажмите, чтобы сменить неделю">Загрузка недели...</button>
                 <button id="all-schedule-btn" class="btn" title="Показать всё расписание без фильтров">📋 Все пары</button>
                 
-                <!-- Выпадающая шторка выбора цвета -->
                 <div class="color-picker-wrapper">
                     <button id="color-menu-btn" class="btn" title="Выбрать цвет акцента">🎨</button>
                     <div id="color-dropdown" class="color-picker-dropdown">
@@ -253,7 +251,6 @@
 
         <div id="live-banner" class="live-banner"></div>
 
-        <!-- Навигация по дням -->
         <div class="tabs">
             <button class="tab-btn" data-day="monday" onclick="showDay('monday', this)">Пн</button>
             <button class="tab-btn" data-day="tuesday" onclick="showDay('tuesday', this)">Вт</button>
@@ -263,7 +260,6 @@
             <button class="tab-btn" data-day="saturday" onclick="showDay('saturday', this)">Сб</button>
         </div>
 
-        <!-- Понедельник -->
         <div id="monday" class="day-card">
             <h2 class="day-title">Понедельник</h2>
             <div class="lesson" data-start-week="1" data-end-week="9">
@@ -314,7 +310,6 @@
             </div>
         </div>
 
-        <!-- Вторник -->
         <div id="tuesday" class="day-card">
             <h2 class="day-title">Вторник</h2>
             <div class="lesson" data-start-week="1" data-end-week="18">
@@ -340,7 +335,6 @@
             </div>
         </div>
 
-        <!-- Среда -->
         <div id="wednesday" class="day-card">
             <h2 class="day-title">Среда</h2>
             <div class="lesson">
@@ -381,7 +375,6 @@
             </div>
         </div>
 
-        <!-- Четверг -->
         <div id="thursday" class="day-card">
             <h2 class="day-title">Четверг</h2>
             <div class="lesson" data-start-week="1" data-end-week="18">
@@ -400,7 +393,6 @@
             </div>
         </div>
 
-        <!-- Пятница -->
         <div id="friday" class="day-card">
             <h2 class="day-title">Пятница</h2>
             <div class="lesson" style="flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 20px 0;">
@@ -410,7 +402,6 @@
             </div>
         </div>
 
-        <!-- Суббота -->
         <div id="saturday" class="day-card">
             <h2 class="day-title">Суббота</h2>
             <div class="lesson" data-parity="even" data-start-week="2" data-end-week="18">
