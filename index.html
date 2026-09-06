@@ -557,6 +557,191 @@
             .schedule-badge { font-size: .66em; }
             .chill-card { padding-left: 10px; padding-right: 10px; }
         }
+
+
+        /* Полировка интерфейса КФУ */
+        .tabs {
+            scroll-snap-type: x proximity;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { scroll-snap-align: center; }
+        .tab-btn.is-today:not(.active) {
+            background: color-mix(in srgb, var(--accent-color) 5%, var(--tab-bg));
+            box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-color) 18%, transparent);
+        }
+
+        .schedule-badge {
+            opacity: .8;
+            font-size: .68em;
+            padding: 2px 7px;
+            background: color-mix(in srgb, var(--accent-color) 5%, var(--soft-bg));
+            border-color: color-mix(in srgb, var(--accent-color) 12%, transparent);
+        }
+
+        .lesson.current-lesson {
+            background: color-mix(in srgb, var(--accent-color) 8%, var(--card-bg));
+            box-shadow: inset 4px 0 0 var(--accent-color), 0 11px 28px color-mix(in srgb, var(--accent-color) 12%, transparent);
+        }
+        .lesson.next-lesson {
+            background: color-mix(in srgb, var(--accent-color) 3.5%, var(--card-bg));
+            box-shadow: inset 2px 0 0 color-mix(in srgb, var(--accent-color) 58%, transparent), 0 5px 14px rgba(31,35,40,.05);
+        }
+        .lesson.next-lesson::after {
+            background: color-mix(in srgb, var(--accent-color) 82%, var(--card-bg));
+            opacity: .82;
+            box-shadow: none;
+        }
+
+        .lesson.current-lesson::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 3px;
+            border-radius: 0 0 13px 13px;
+            background: linear-gradient(90deg,
+                var(--accent-color) 0%,
+                var(--accent-color) var(--lesson-progress, 0%),
+                color-mix(in srgb, var(--accent-color) 14%, transparent) var(--lesson-progress, 0%),
+                color-mix(in srgb, var(--accent-color) 14%, transparent) 100%);
+            pointer-events: none;
+        }
+
+        .window-lesson {
+            border: 1px dashed color-mix(in srgb, #8250df 28%, var(--border-color));
+            border-left: 3px dashed color-mix(in srgb, #8250df 62%, transparent);
+            border-radius: 12px;
+            margin: 8px 0;
+            background: color-mix(in srgb, #8250df 3%, var(--card-bg));
+            opacity: .82;
+        }
+        .window-lesson:hover { transform: none !important; opacity: 1; }
+        .window-slot { font-weight: 750; letter-spacing: .01em; }
+
+        .chill-card {
+            border: 1px solid color-mix(in srgb, #2ea043 20%, var(--border-color));
+            border-left: 3px solid color-mix(in srgb, #2ea043 58%, transparent);
+            background: linear-gradient(145deg,
+                color-mix(in srgb, #2ea043 5%, var(--card-bg)),
+                color-mix(in srgb, var(--accent-color) 2%, var(--card-bg)));
+            box-shadow: 0 8px 22px rgba(31,35,40,.05);
+        }
+
+        .live-banner {
+            position: relative;
+            isolation: isolate;
+        }
+        .live-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(circle at 100% 0%, rgba(255,255,255,.12), transparent 38%);
+            pointer-events: none;
+        }
+        .live-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 6px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.14);
+            color: #fff;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .02em;
+        }
+        .live-title {
+            display: block;
+            color: #fff;
+            font-size: 1.02rem;
+            font-weight: 800;
+            line-height: 1.35;
+        }
+        .live-secondary {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,.22);
+        }
+        .next-study-card {
+            margin-top: 11px;
+            padding: 10px 11px;
+            border: 1px solid rgba(255,255,255,.18);
+            border-radius: 12px;
+            background: rgba(255,255,255,.08);
+        }
+        .next-study-card .next-study-label {
+            display: inline-block;
+            margin-bottom: 4px;
+            font-size: .72rem;
+            font-weight: 850;
+            text-transform: uppercase;
+            letter-spacing: .035em;
+            color: rgba(255,255,255,.78);
+        }
+        .next-study-card .next-study-title { color: #fff; font-weight: 750; }
+        .next-study-card .next-study-meta { color: rgba(255,255,255,.82); margin-top: 2px; }
+
+        body.all-schedule-mode .header {
+            box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-color) 22%, transparent), var(--shadow-soft);
+        }
+        body.all-schedule-mode #week-subtitle::before {
+            content: '📋 ';
+        }
+
+        #mobile-settings-btn[aria-expanded="true"] {
+            color: var(--accent-color);
+            background: color-mix(in srgb, var(--accent-color) 9%, transparent);
+        }
+
+        .day-card.just-opened .day-title {
+            animation: dayTitleFlash .65s ease;
+        }
+        @keyframes dayTitleFlash {
+            0% { color: var(--accent-color); transform: translateX(4px); }
+            100% { color: var(--text-color); transform: translateX(0); }
+        }
+
+        body.dark-theme {
+            --secondary-text: #b2bdc8;
+            --border-color: #2b333d;
+            --lesson-border: #252d36;
+        }
+
+        @media (max-width: 599px) {
+            body { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+            .secondary-controls {
+                top: auto !important;
+                left: auto !important;
+                right: 10px;
+                bottom: calc(74px + env(safe-area-inset-bottom));
+                -webkit-backdrop-filter: blur(12px);
+            }
+            .mobile-nav {
+                width: min(calc(100% - 12px), 560px);
+                gap: 2px;
+                padding: 6px;
+                border-radius: 18px;
+                -webkit-backdrop-filter: blur(14px);
+            }
+            .mobile-nav-btn {
+                padding: 5px 1px 4px;
+                border-radius: 12px;
+                font-size: .62rem;
+                gap: 3px;
+            }
+            .mobile-nav-btn .nav-icon { font-size: 1.05rem; }
+            #mobile-next-day-btn span:last-child { font-size: 0; }
+            #mobile-next-day-btn span:last-child::after { content: 'След. день'; font-size: .62rem; }
+            .tabs { scroll-padding-inline: 12px; }
+            .live-title { font-size: .96rem; }
+            .next-study-card { padding: 9px 10px; }
+        }
+
 </style>
 </head>
 <body>
@@ -1037,6 +1222,7 @@
         function updateScheduleUI() {
             const allBtn = document.getElementById('all-schedule-btn');
             allBtn.classList.toggle('active-mode', isAllScheduleMode);
+            document.body.classList.toggle('all-schedule-mode', isAllScheduleMode);
 
             document.querySelectorAll('.lesson').forEach(lesson => {
                 if (isAllScheduleMode) {
@@ -1061,7 +1247,10 @@
         }
 
         function updateLessonVisualStates(mskDate = getMskDate()) {
-            document.querySelectorAll('.lesson').forEach(lesson => lesson.classList.remove('past-lesson', 'current-lesson', 'next-lesson'));
+            document.querySelectorAll('.lesson').forEach(lesson => {
+                lesson.classList.remove('past-lesson', 'current-lesson', 'next-lesson');
+                lesson.style.removeProperty('--lesson-progress');
+            });
             if (displayedWeekNum !== currentRealWeekNum) return;
 
             const todayOffset = (mskDate.getDay() + 6) % 7;
@@ -1085,6 +1274,9 @@
                     lesson.classList.add('past-lesson');
                 } else if (startKey <= currentWeekMinute && endKey >= currentWeekMinute) {
                     lesson.classList.add('current-lesson');
+                    const duration = Math.max(1, range.end - range.start);
+                    const progress = Math.max(0, Math.min(100, ((currentMins - range.start) / duration) * 100));
+                    lesson.style.setProperty('--lesson-progress', `${progress}%`);
                 } else if (startKey > currentWeekMinute) {
                     if (startKey < nextStartKey) {
                         nextStartKey = startKey;
@@ -1151,7 +1343,25 @@
 
         const settingsToggle = document.getElementById('settings-toggle');
         const secondaryControls = document.getElementById('secondary-controls');
+        const secondaryControlsAnchor = document.createComment('secondary-controls-home');
+        secondaryControls.parentNode.insertBefore(secondaryControlsAnchor, secondaryControls);
+
+        function placeSettingsPanelForViewport() {
+            const isMobile = window.matchMedia('(max-width: 599px)').matches;
+            if (isMobile) {
+                if (secondaryControls.parentNode !== document.body) document.body.appendChild(secondaryControls);
+            } else if (secondaryControls.parentNode === document.body) {
+                secondaryControlsAnchor.parentNode.insertBefore(secondaryControls, secondaryControlsAnchor.nextSibling);
+                secondaryControls.classList.remove('open');
+                settingsToggle.setAttribute('aria-expanded', 'false');
+                mobileSettingsBtn?.setAttribute('aria-expanded', 'false');
+            }
+        }
+        placeSettingsPanelForViewport();
+        window.addEventListener('resize', placeSettingsPanelForViewport);
+
         function toggleSettingsPanel(e) {
+            placeSettingsPanelForViewport();
             if (e) e.stopPropagation();
             const isOpen = secondaryControls.classList.toggle('open');
             settingsToggle.setAttribute('aria-expanded', String(isOpen));
@@ -1262,7 +1472,7 @@
             const dayName = fullDayNames[nextInfo.dayId] || nextInfo.dayId;
             const dateText = `${nextInfo.date.getDate()} ${fullMonthNames[nextInfo.date.getMonth()]}`;
             const timeText = range ? `${String(Math.floor(range.start/60)).padStart(2,'0')}:${String(range.start%60).padStart(2,'0')}` : '';
-            return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.25);"><strong>Следующий учебный день: ${dayName}, ${dateText} • ${nextInfo.weekNum} нед.</strong><div class="subject-info" style="margin-top:4px;">${timeText ? `${timeText} — ` : ''}${title}</div></div>`;
+            return `<div class="next-study-card"><span class="next-study-label">Следующий учебный день</span><div class="next-study-title">${dayName}, ${dateText} • ${nextInfo.weekNum} нед.</div><div class="next-study-meta">${timeText ? `${timeText} — ` : ''}${title}</div></div>`;
         }
 
         function goToNextStudyDay() {
@@ -1274,6 +1484,13 @@
             updateScheduleUI();
             const btn = document.querySelector(`.tab-btn[data-day="${nextInfo.dayId}"]`);
             showDay(nextInfo.dayId, btn);
+            const openedCard = document.getElementById(nextInfo.dayId);
+            if (openedCard) {
+                openedCard.classList.remove('just-opened');
+                void openedCard.offsetWidth;
+                openedCard.classList.add('just-opened');
+                setTimeout(() => openedCard.classList.remove('just-opened'), 700);
+            }
             updateLiveStatus();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1290,13 +1507,13 @@
             if (currentDayId === 'sunday') {
                 setBannerState('off');
                 const nextStudyDay = findNextStudyDay(mskDate, true);
-                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Воскресенье, пар нет. Отдыхаем! 🎉${formatNextStudyDay(nextStudyDay)}`;
+                banner.innerHTML = `<span class="live-kicker">Сегодня • ${timeStr} МСК</span><span class="live-title">Воскресенье, пар нет. Отдыхаем! 🎉</span>${formatNextStudyDay(nextStudyDay)}`;
                 return;
             }
             if (currentDayId === 'friday') {
                 setBannerState('off');
                 const nextStudyDay = findNextStudyDay(mskDate, true);
-                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Пятница! 🏖️ Chill...${formatNextStudyDay(nextStudyDay)}`;
+                banner.innerHTML = `<span class="live-kicker">Сегодня • ${timeStr} МСК</span><span class="live-title">Пятница! 🏖️ Chill...</span>${formatNextStudyDay(nextStudyDay)}`;
                 return;
             }
 
@@ -1324,9 +1541,9 @@
             if (active) {
                 setBannerState('active');
                 const left = active.end - currentMins;
-                banner.innerHTML = `<div><strong>🕒 ${timeStr} (МСК) — Идёт пара • осталось ${formatDuration(left)}</strong><div class="subject-info" style="margin-top:4px;">${active.contentHTML}</div></div>`;
+                banner.innerHTML = `<div><span class="live-kicker">Сейчас • ${timeStr} МСК</span><span class="live-title">Идёт пара • осталось ${formatDuration(left)}</span><div class="subject-info" style="margin-top:5px;">${active.contentHTML}</div></div>`;
                 if (next) {
-                    banner.innerHTML += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.25);"><strong>Далее: ${formatStart(next)} • через ${formatDuration(next.start - currentMins)}</strong><div class="subject-info" style="margin-top:4px;">${next.contentHTML}</div></div>`;
+                    banner.innerHTML += `<div class="live-secondary"><strong>Далее: ${formatStart(next)} • через ${formatDuration(next.start - currentMins)}</strong><div class="subject-info" style="margin-top:4px;">${next.contentHTML}</div></div>`;
                 } else {
                     const nextStudyDay = findNextStudyDay(mskDate, true);
                     banner.innerHTML += `<div style="margin-top:10px;opacity:.9;"><strong>Далее:</strong> на сегодня пары закончились.</div>${formatNextStudyDay(nextStudyDay)}`;
@@ -1337,11 +1554,11 @@
             if (next) {
                 const wait = next.start - currentMins;
                 setBannerState('upcoming', wait);
-                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК) — Следующая пара: ${formatStart(next)} • через ${formatDuration(wait)}</strong><div class="subject-info" style="margin-top:4px;">${next.contentHTML}</div>`;
+                banner.innerHTML = `<span class="live-kicker">Сегодня • ${timeStr} МСК</span><span class="live-title">Следующая пара: ${formatStart(next)} • через ${formatDuration(wait)}</span><div class="subject-info" style="margin-top:5px;">${next.contentHTML}</div>`;
             } else {
                 setBannerState('finished');
                 const nextStudyDay = findNextStudyDay(mskDate, true);
-                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> На сегодня пары закончились. 🎉${formatNextStudyDay(nextStudyDay)}`;
+                banner.innerHTML = `<span class="live-kicker">Сегодня • ${timeStr} МСК</span><span class="live-title">На сегодня пары закончились. 🎉</span>${formatNextStudyDay(nextStudyDay)}`;
             }
         }
 
