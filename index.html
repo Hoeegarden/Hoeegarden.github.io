@@ -474,7 +474,7 @@
                 z-index: 220;
                 width: min(calc(100% - 16px), 560px);
                 display: grid;
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(5, 1fr);
                 gap: 4px;
                 padding: 7px;
                 background: color-mix(in srgb, var(--card-bg) 94%, transparent);
@@ -774,6 +774,9 @@
         </button>
         <button id="mobile-all-btn" class="mobile-nav-btn" type="button" aria-label="Показать все пары без фильтров">
             <span class="nav-icon">📋</span><span>Все пары</span>
+        </button>
+        <button id="mobile-next-day-btn" class="mobile-nav-btn" type="button" aria-label="Перейти к следующему учебному дню">
+            <span class="nav-icon">⏭️</span><span>Следующий</span>
         </button>
         <button id="mobile-settings-btn" class="mobile-nav-btn" type="button" aria-label="Открыть настройки оформления" aria-expanded="false">
             <span class="nav-icon">⚙️</span><span>Настройки</span>
@@ -1139,10 +1142,12 @@
         const mobileTodayBtn = document.getElementById('mobile-today-btn');
         const mobileWeekBtn = document.getElementById('mobile-week-btn');
         const mobileAllBtn = document.getElementById('mobile-all-btn');
+        const mobileNextDayBtn = document.getElementById('mobile-next-day-btn');
         const mobileSettingsBtn = document.getElementById('mobile-settings-btn');
         mobileTodayBtn?.addEventListener('click', () => document.getElementById('today-btn').click());
         mobileWeekBtn?.addEventListener('click', () => document.getElementById('week-toggle').click());
         mobileAllBtn?.addEventListener('click', () => document.getElementById('all-schedule-btn').click());
+        mobileNextDayBtn?.addEventListener('click', goToNextStudyDay);
 
         const settingsToggle = document.getElementById('settings-toggle');
         const secondaryControls = document.getElementById('secondary-controls');
@@ -1211,6 +1216,68 @@
             }
         }
 
+        function getDayIdFromDate(date) {
+            return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][date.getDay()];
+        }
+
+        function getWeekNumForDate(date) {
+            const noon = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
+            return Math.floor((noon.getTime() - semesterWeekStart.getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1;
+        }
+
+        function getRealLessonsForDay(dayId, weekNum) {
+            if (weekNum < 1 || weekNum > 18 || dayId === 'sunday') return [];
+            const parity = weekNum % 2 === 0 ? 'even' : 'odd';
+            const card = document.getElementById(dayId);
+            if (!card) return [];
+            return Array.from(card.querySelectorAll('.lesson')).filter(lesson => {
+                if (!isLessonApplicableForWeek(lesson, weekNum, parity)) return false;
+                if (isWindowLesson(lesson) || isChillLesson(lesson)) return false;
+                return !!getLessonTimeRange(lesson);
+            });
+        }
+
+        function findNextStudyDay(fromDate = getMskDate(), afterCurrentDay = true) {
+            const base = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), 12, 0, 0);
+            const startOffset = afterCurrentDay ? 1 : 0;
+            for (let i = startOffset; i <= 21; i++) {
+                const date = new Date(base);
+                date.setDate(base.getDate() + i);
+                const weekNum = getWeekNumForDate(date);
+                if (weekNum > 18) return null;
+                const dayId = getDayIdFromDate(date);
+                const lessons = getRealLessonsForDay(dayId, weekNum);
+                if (lessons.length) {
+                    lessons.sort((a,b) => getLessonTimeRange(a).start - getLessonTimeRange(b).start);
+                    return { date, weekNum, dayId, lesson: lessons[0] };
+                }
+            }
+            return null;
+        }
+
+        function formatNextStudyDay(nextInfo) {
+            if (!nextInfo) return '';
+            const range = getLessonTimeRange(nextInfo.lesson);
+            const title = nextInfo.lesson.querySelector('.subject-title')?.textContent?.trim() || 'Занятие';
+            const dayName = fullDayNames[nextInfo.dayId] || nextInfo.dayId;
+            const dateText = `${nextInfo.date.getDate()} ${fullMonthNames[nextInfo.date.getMonth()]}`;
+            const timeText = range ? `${String(Math.floor(range.start/60)).padStart(2,'0')}:${String(range.start%60).padStart(2,'0')}` : '';
+            return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.25);"><strong>Следующий учебный день: ${dayName}, ${dateText} • ${nextInfo.weekNum} нед.</strong><div class="subject-info" style="margin-top:4px;">${timeText ? `${timeText} — ` : ''}${title}</div></div>`;
+        }
+
+        function goToNextStudyDay() {
+            const nextInfo = findNextStudyDay(getMskDate(), true);
+            if (!nextInfo) return;
+            displayedWeekNum = nextInfo.weekNum;
+            displayedParity = displayedWeekNum % 2 === 0 ? 'even' : 'odd';
+            isAllScheduleMode = false;
+            updateScheduleUI();
+            const btn = document.querySelector(`.tab-btn[data-day="${nextInfo.dayId}"]`);
+            showDay(nextInfo.dayId, btn);
+            updateLiveStatus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function updateLiveStatus() {
             const mskDate = getMskDate();
             const currentMins = mskDate.getHours() * 60 + mskDate.getMinutes();
@@ -1222,12 +1289,14 @@
 
             if (currentDayId === 'sunday') {
                 setBannerState('off');
-                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Воскресенье, пар нет. Отдыхаем! 🎉`;
+                const nextStudyDay = findNextStudyDay(mskDate, true);
+                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Воскресенье, пар нет. Отдыхаем! 🎉${formatNextStudyDay(nextStudyDay)}`;
                 return;
             }
             if (currentDayId === 'friday') {
                 setBannerState('off');
-                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Пятница! 🏖️ Chill...`;
+                const nextStudyDay = findNextStudyDay(mskDate, true);
+                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> Пятница! 🏖️ Chill...${formatNextStudyDay(nextStudyDay)}`;
                 return;
             }
 
@@ -1259,7 +1328,8 @@
                 if (next) {
                     banner.innerHTML += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.25);"><strong>Далее: ${formatStart(next)} • через ${formatDuration(next.start - currentMins)}</strong><div class="subject-info" style="margin-top:4px;">${next.contentHTML}</div></div>`;
                 } else {
-                    banner.innerHTML += `<div style="margin-top:10px;opacity:.9;"><strong>Далее:</strong> на сегодня пары закончились.</div>`;
+                    const nextStudyDay = findNextStudyDay(mskDate, true);
+                    banner.innerHTML += `<div style="margin-top:10px;opacity:.9;"><strong>Далее:</strong> на сегодня пары закончились.</div>${formatNextStudyDay(nextStudyDay)}`;
                 }
                 return;
             }
@@ -1270,7 +1340,8 @@
                 banner.innerHTML = `<strong>🕒 ${timeStr} (МСК) — Следующая пара: ${formatStart(next)} • через ${formatDuration(wait)}</strong><div class="subject-info" style="margin-top:4px;">${next.contentHTML}</div>`;
             } else {
                 setBannerState('finished');
-                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> На сегодня пары закончились. 🎉`;
+                const nextStudyDay = findNextStudyDay(mskDate, true);
+                banner.innerHTML = `<strong>🕒 ${timeStr} (МСК):</strong> На сегодня пары закончились. 🎉${formatNextStudyDay(nextStudyDay)}`;
             }
         }
 
