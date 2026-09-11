@@ -869,8 +869,8 @@
         .changelog-btn-label { display: none; }
 
         @media (max-width: 599px) {
-            .secondary-controls .changelog-btn { width: auto; min-width: auto; padding-inline: 11px; }
-            .secondary-controls .changelog-btn-label { display: inline; }
+            .secondary-controls .changelog-btn { width: 42px; min-width: 42px; padding: 8px 10px; }
+            .secondary-controls .changelog-btn-label { display: none; }
             .changelog-overlay { align-items: flex-end; padding: 10px 10px calc(78px + env(safe-area-inset-bottom)); }
             .changelog-card { width: 100%; border-radius: 18px; max-height: 72vh; }
         }
@@ -901,7 +901,7 @@
                         </div>
                     </div>
                     <button id="theme-toggle" class="btn" type="button" title="Сменить тему" aria-label="Сменить светлую или тёмную тему">🌙</button>
-                    <button id="changelog-btn" class="btn changelog-btn" type="button" title="Последние изменения сайта" aria-label="Открыть change-log"><span aria-hidden="true">📝</span><span class="changelog-btn-label"></span></button>
+                    <button id="changelog-btn" class="btn changelog-btn" type="button" title="Последние изменения сайта" aria-label="Открыть change-log"><span aria-hidden="true">📝</span><span class="changelog-btn-label">Change-log</span></button>
                 </div>
             </div>
         </div>
@@ -1089,7 +1089,7 @@
     <div id="changelog-overlay" class="changelog-overlay" aria-hidden="true">
         <section class="changelog-card" role="dialog" aria-modal="true" aria-labelledby="changelog-title">
             <div class="changelog-head">
-                <h2 id="changelog-title" class="changelog-title">📝</h2>
+                <h2 id="changelog-title" class="changelog-title">📝 Change-log</h2>
                 <button id="changelog-close" class="changelog-close" type="button" aria-label="Закрыть">✕</button>
             </div>
             <div id="changelog-list" class="changelog-status">
