@@ -45,14 +45,16 @@
             --shadow-focus: 0 12px 30px rgba(0, 0, 0, 0.32);
         }
 
-        body[data-color="red"] { --accent-color: #cf222e; --accent-gradient-start: #cf222e; --accent-gradient-end: #a40e26; }
-        body.dark-theme[data-color="red"] { --accent-color: #ff7b72; --accent-gradient-start: #ff7b72; --accent-gradient-end: #b31d28; }
-        body[data-color="green"] { --accent-color: #1a7f37; --accent-gradient-start: #1a7f37; --accent-gradient-end: #115822; }
-        body.dark-theme[data-color="green"] { --accent-color: #3fb950; --accent-gradient-start: #3fb950; --accent-gradient-end: #238636; }
-        body[data-color="yellow"] { --accent-color: #9a6700; --accent-gradient-start: #9a6700; --accent-gradient-end: #734c00; }
-        body.dark-theme[data-color="yellow"] { --accent-color: #d29922; --accent-gradient-start: #d29922; --accent-gradient-end: #9e6a03; }
-        body[data-color="purple"] { --accent-color: #8250df; --accent-gradient-start: #8250df; --accent-gradient-end: #5a32a3; }
-        body.dark-theme[data-color="purple"] { --accent-color: #bc8cff; --accent-gradient-start: #bc8cff; --accent-gradient-end: #8957e5; }
+        body[data-color="blue"] { --accent-color: #0969da; --accent-gradient-start: #0969da; --accent-gradient-end: #6f42c1; }
+        body.dark-theme[data-color="blue"] { --accent-color: #58a6ff; --accent-gradient-start: #1f6feb; --accent-gradient-end: #6e40c9; }
+        body[data-color="red"] { --accent-color: #cf222e; --accent-gradient-start: #cf222e; --accent-gradient-end: #a83a78; }
+        body.dark-theme[data-color="red"] { --accent-color: #ff7b72; --accent-gradient-start: #b62324; --accent-gradient-end: #8f3f71; }
+        body[data-color="green"] { --accent-color: #1a7f37; --accent-gradient-start: #1a7f37; --accent-gradient-end: #087f73; }
+        body.dark-theme[data-color="green"] { --accent-color: #3fb950; --accent-gradient-start: #238636; --accent-gradient-end: #167b79; }
+        body[data-color="yellow"] { --accent-color: #9a6700; --accent-gradient-start: #9a6700; --accent-gradient-end: #b45b08; }
+        body.dark-theme[data-color="yellow"] { --accent-color: #d29922; --accent-gradient-start: #9e6a03; --accent-gradient-end: #a74408; }
+        body[data-color="purple"] { --accent-color: #8250df; --accent-gradient-start: #8250df; --accent-gradient-end: #b13fa1; }
+        body.dark-theme[data-color="purple"] { --accent-color: #bc8cff; --accent-gradient-start: #7048c9; --accent-gradient-end: #9d4fbb; }
 
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
@@ -178,6 +180,126 @@
         .color-btn.green { background-color: #1a7f37; }
         .color-btn.yellow { background-color: #d29922; }
         .color-btn.purple { background-color: #8250df; }
+
+        /* Настройка характера акцента: обычный / градиент / плавный перелив. */
+        .color-picker-dropdown {
+            width: min(300px, calc(100vw - 24px));
+            flex-direction: column;
+            align-items: stretch;
+            gap: 11px;
+        }
+        .color-options-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .accent-mode-panel {
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+        .accent-mode-label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--secondary-text);
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .025em;
+            text-transform: uppercase;
+        }
+        .accent-mode-options {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 5px;
+        }
+        .accent-mode-btn:last-child:nth-child(odd) { grid-column: 1 / -1; }
+        .accent-mode-btn {
+            min-width: 0;
+            padding: 7px 5px;
+            border: 1px solid var(--btn-border);
+            border-radius: 10px;
+            background: var(--btn-bg);
+            color: var(--secondary-text);
+            cursor: pointer;
+            font: inherit;
+            font-size: .68rem;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+        .accent-mode-btn:hover { border-color: color-mix(in srgb, var(--accent-color) 45%, var(--btn-border)); }
+        .accent-mode-btn.active-mode {
+            color: var(--accent-color);
+            border-color: color-mix(in srgb, var(--accent-color) 42%, var(--btn-border));
+            background: color-mix(in srgb, var(--accent-color) 8%, var(--btn-bg));
+            box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-color) 8%, transparent);
+        }
+
+
+
+        /* ============================================================
+           Акцентные режимы: Обычный / Градиент / Перелив
+           ============================================================ */
+
+        @keyframes accentGradientFlow {
+            from { background-position: 0% 50%; }
+            to   { background-position: 200% 50%; }
+        }
+
+        body[data-accent-mode="solid"] .live-banner {
+            background: var(--accent-color);
+        }
+
+        body[data-accent-mode="gradient"] .live-banner {
+            background: linear-gradient(
+                125deg,
+                var(--accent-gradient-start),
+                var(--accent-gradient-end)
+            );
+        }
+
+        body[data-accent-mode="animated"] .live-banner {
+            background:
+                linear-gradient(
+                    120deg,
+                    var(--accent-gradient-start),
+                    var(--accent-gradient-end),
+                    var(--accent-gradient-start)
+                );
+            background-size: 200% 100%;
+            background-repeat: repeat-x;
+            animation: bannerIn .38s ease both, accentGradientFlow 8s linear infinite;
+        }
+
+        body[data-accent-mode="gradient"] .tab-btn.active,
+        body[data-accent-mode="gradient"] #all-schedule-btn.active-mode,
+        body[data-accent-mode="gradient"] .mobile-nav-btn.active-mode,
+        body[data-accent-mode="animated"] .tab-btn.active,
+        body[data-accent-mode="animated"] #all-schedule-btn.active-mode,
+        body[data-accent-mode="animated"] .mobile-nav-btn.active-mode {
+            color: #fff;
+            border-color: transparent;
+            background:
+                linear-gradient(
+                    125deg,
+                    var(--accent-gradient-start),
+                    var(--accent-gradient-end)
+                );
+        }
+
+        body[data-accent-mode="animated"] .tab-btn.active,
+        body[data-accent-mode="animated"] #all-schedule-btn.active-mode,
+        body[data-accent-mode="animated"] .mobile-nav-btn.active-mode {
+            background:
+                linear-gradient(
+                    120deg,
+                    var(--accent-gradient-start),
+                    var(--accent-gradient-end),
+                    var(--accent-gradient-start)
+                );
+            background-size: 200% 100%;
+            background-repeat: repeat-x;
+            animation: accentGradientFlow 8s linear infinite;
+        }
 
         .live-banner {
             background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
@@ -505,8 +627,91 @@
             .mobile-nav-btn.is-current { color: var(--accent-color); background: color-mix(in srgb, var(--accent-color) 8%, transparent); }
         }
 
+        /* Плавный визуальный отклик при свайпе между днями. */
+        .swipe-indicator {
+            position: fixed;
+            left: 50%;
+            bottom: calc(88px + env(safe-area-inset-bottom));
+            z-index: 310;
+            max-width: calc(100vw - 28px);
+            padding: 8px 13px;
+            border: 1px solid color-mix(in srgb, var(--accent-color) 26%, var(--border-color));
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--card-bg) 92%, transparent);
+            color: var(--text-color);
+            box-shadow: 0 10px 28px rgba(0,0,0,.16);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            font-size: .78rem;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, 8px) scale(.97);
+            transition: opacity .18s ease, transform .22s cubic-bezier(.2,.8,.2,1), visibility .18s ease;
+            pointer-events: none;
+        }
+        .swipe-indicator.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, 0) scale(1);
+        }
+
+        @media (max-width: 599px) {
+            .day-card.swipe-dragging {
+                animation: none !important;
+                transition: none !important;
+                transform: translate3d(var(--swipe-x, 0px), 0, 0);
+                opacity: var(--swipe-opacity, 1);
+                will-change: transform, opacity;
+            }
+            .day-card.swipe-snapback {
+                animation: none !important;
+                transition: transform .22s cubic-bezier(.2,.8,.2,1), opacity .22s ease !important;
+                transform: translate3d(0,0,0);
+                opacity: 1;
+            }
+            .day-card.swipe-exit-left { animation: swipeExitLeft .17s ease-out both !important; }
+            .day-card.swipe-exit-right { animation: swipeExitRight .17s ease-out both !important; }
+            .day-card.swipe-enter-right { animation: swipeEnterRight .25s cubic-bezier(.2,.8,.2,1) both !important; }
+            .day-card.swipe-enter-left { animation: swipeEnterLeft .25s cubic-bezier(.2,.8,.2,1) both !important; }
+        }
+        @keyframes swipeExitLeft {
+            from { transform: translate3d(var(--swipe-x, 0px),0,0); opacity: var(--swipe-opacity, 1); }
+            to { transform: translate3d(-115%,0,0); opacity: .16; }
+        }
+        @keyframes swipeExitRight {
+            from { transform: translate3d(var(--swipe-x, 0px),0,0); opacity: var(--swipe-opacity, 1); }
+            to { transform: translate3d(115%,0,0); opacity: .16; }
+        }
+        @keyframes swipeEnterRight {
+            from { transform: translate3d(28px,0,0); opacity: .25; }
+            to { transform: translate3d(0,0,0); opacity: 1; }
+        }
+        @keyframes swipeEnterLeft {
+            from { transform: translate3d(-28px,0,0); opacity: .25; }
+            to { transform: translate3d(0,0,0); opacity: 1; }
+        }
+
+
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+            }
+
+            body[data-accent-mode="animated"] .live-banner,
+            body[data-accent-mode="animated"] .tab-btn.active,
+            body[data-accent-mode="animated"] #all-schedule-btn.active-mode,
+            body[data-accent-mode="animated"] .mobile-nav-btn.active-mode {
+                animation: none !important;
+            }
+
+            .swipe-indicator { transition: none !important; }
         }
     
 
@@ -875,9 +1080,10 @@
             .changelog-card { width: 100%; border-radius: 18px; max-height: 72vh; }
         }
 
+
 </style>
 </head>
-<body>
+<body data-accent-mode="gradient">
     <div class="container">
         <div class="header">
             <div class="brand">
@@ -893,11 +1099,21 @@
                     <div class="color-picker-wrapper">
                         <button id="color-menu-btn" class="btn" type="button" title="Выбрать цвет акцента" aria-label="Выбрать цвет акцента">🎨</button>
                         <div id="color-dropdown" class="color-picker-dropdown">
-                            <button class="color-btn blue" data-set-color="blue" type="button" title="Синий" aria-label="Синий цвет"></button>
-                            <button class="color-btn red" data-set-color="red" type="button" title="Красный" aria-label="Красный цвет"></button>
-                            <button class="color-btn green" data-set-color="green" type="button" title="Зелёный" aria-label="Зелёный цвет"></button>
-                            <button class="color-btn yellow" data-set-color="yellow" type="button" title="Жёлтый" aria-label="Жёлтый цвет"></button>
-                            <button class="color-btn purple" data-set-color="purple" type="button" title="Фиолетовый" aria-label="Фиолетовый цвет"></button>
+                            <div class="color-options-row" aria-label="Цвет акцента">
+                                <button class="color-btn blue" data-set-color="blue" type="button" title="Синий" aria-label="Синий цвет"></button>
+                                <button class="color-btn red" data-set-color="red" type="button" title="Красный" aria-label="Красный цвет"></button>
+                                <button class="color-btn green" data-set-color="green" type="button" title="Зелёный" aria-label="Зелёный цвет"></button>
+                                <button class="color-btn yellow" data-set-color="yellow" type="button" title="Жёлтый" aria-label="Жёлтый цвет"></button>
+                                <button class="color-btn purple" data-set-color="purple" type="button" title="Фиолетовый" aria-label="Фиолетовый цвет"></button>
+                            </div>
+                            <div class="accent-mode-panel">
+                                <span class="accent-mode-label">Стиль акцента</span>
+                                <div class="accent-mode-options" role="group" aria-label="Стиль акцента">
+                                    <button class="accent-mode-btn" data-accent-mode="solid" type="button" title="Обычный однотонный акцент">● Обычный</button>
+                                    <button class="accent-mode-btn" data-accent-mode="gradient" type="button" title="Статичный градиент">◐ Градиент</button>
+                                    <button class="accent-mode-btn" data-accent-mode="animated" type="button" title="Плавное переливание градиента">✨ Перелив</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <button id="theme-toggle" class="btn" type="button" title="Сменить тему" aria-label="Сменить светлую или тёмную тему">🌙</button>
@@ -916,6 +1132,7 @@
             <button class="tab-btn" data-day="friday" data-label="Пт" onclick="showDay('friday', this)">Пт</button>
             <button class="tab-btn" data-day="saturday" data-label="Сб" onclick="showDay('saturday', this)">Сб</button>
         </div>
+        <div id="swipe-indicator" class="swipe-indicator" aria-live="polite" aria-atomic="true"></div>
         <div class="day-card" id="monday">
 <h2 class="day-title">Понедельник</h2>
 <div class="lesson" data-end-week="9" data-start-week="1">
@@ -1452,14 +1669,18 @@
         }
 
         // Свайпы между днями на мобильных устройствах.
-        // Кнопки вкладок продолжают работать параллельно со свайпами.
+        // Карточка следует за пальцем, а на границе недели Сб ↔ Пн меняется и учебная неделя.
         const swipeDayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         let swipeStartX = 0;
         let swipeStartY = 0;
+        let swipeCurrentX = 0;
         let swipeTracking = false;
+        let swipeHorizontal = false;
+        let swipeCard = null;
+        let swipeSettling = false;
+        let swipeIndicatorTimer = null;
 
         function getActiveDayId() {
-            // Надёжнее определять реально открытую карточку, а не полагаться только на класс active у вкладки.
             const visibleCard = Array.from(document.querySelectorAll('.day-card')).find(card => {
                 const style = window.getComputedStyle(card);
                 return style.display !== 'none';
@@ -1467,83 +1688,164 @@
             return visibleCard?.id || document.querySelector('.tab-btn.active')?.dataset.day || null;
         }
 
-        function openSwipeTarget(targetWeek, targetDayId) {
+        function getSwipeTarget(direction) {
+            const currentDayId = getActiveDayId();
+            const currentIndex = swipeDayOrder.indexOf(currentDayId);
+            if (currentIndex === -1) return null;
+
+            if (direction > 0) {
+                if (currentIndex < swipeDayOrder.length - 1) {
+                    return { week: displayedWeekNum, dayId: swipeDayOrder[currentIndex + 1] };
+                }
+                if (displayedWeekNum < 18) return { week: displayedWeekNum + 1, dayId: 'monday' };
+                return null;
+            }
+
+            if (currentIndex > 0) {
+                return { week: displayedWeekNum, dayId: swipeDayOrder[currentIndex - 1] };
+            }
+            if (displayedWeekNum > 1) return { week: displayedWeekNum - 1, dayId: 'saturday' };
+            return null;
+        }
+
+        function showSwipeIndicator(dayId, weekNum) {
+            const indicator = document.getElementById('swipe-indicator');
+            if (!indicator || !window.matchMedia('(max-width: 599px)').matches) return;
+            const date = getDateForWeekDay(weekNum, dayId);
+            const dateText = date ? ` • ${formatLongDate(date)}` : '';
+            indicator.textContent = `${fullDayNames[dayId] || dayId}${dateText} • ${weekNum} неделя`;
+            indicator.classList.remove('show');
+            void indicator.offsetWidth;
+            indicator.classList.add('show');
+            clearTimeout(swipeIndicatorTimer);
+            swipeIndicatorTimer = setTimeout(() => indicator.classList.remove('show'), 900);
+        }
+
+        function clearSwipeCardState(card = swipeCard) {
+            if (!card) return;
+            card.classList.remove('swipe-dragging', 'swipe-snapback', 'swipe-exit-left', 'swipe-exit-right');
+            card.style.removeProperty('--swipe-x');
+            card.style.removeProperty('--swipe-opacity');
+        }
+
+        function openSwipeTarget(targetWeek, targetDayId, enterDirection = 0) {
             if (targetWeek < 1 || targetWeek > 18) return;
 
             displayedWeekNum = targetWeek;
             displayedParity = displayedWeekNum % 2 === 0 ? 'even' : 'odd';
             isAllScheduleMode = false;
 
-            // Сначала полностью обновляем выбранную неделю, затем открываем нужный день.
             updateScheduleUI();
             const targetBtn = document.querySelector(`.tab-btn[data-day="${targetDayId}"]`);
             showDay(targetDayId, targetBtn);
+
+            const newCard = document.getElementById(targetDayId);
+            if (newCard && enterDirection !== 0 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                const cls = enterDirection > 0 ? 'swipe-enter-right' : 'swipe-enter-left';
+                newCard.classList.remove('swipe-enter-right', 'swipe-enter-left');
+                void newCard.offsetWidth;
+                newCard.classList.add(cls);
+                newCard.addEventListener('animationend', () => newCard.classList.remove(cls), { once: true });
+            }
+
             updateLiveStatus();
             targetBtn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            showSwipeIndicator(targetDayId, targetWeek);
         }
 
-        function moveBySwipe(direction) {
-            if (!window.matchMedia('(max-width: 599px)').matches) return;
+        function finishSwipe(direction, target) {
+            if (swipeSettling) return;
+            const card = swipeCard;
+            if (!card) return;
 
-            const currentDayId = getActiveDayId();
-            const currentIndex = swipeDayOrder.indexOf(currentDayId);
-            if (currentIndex === -1) return;
-
-            if (direction > 0) {
-                // Обычный переход к следующему дню.
-                if (currentIndex < swipeDayOrder.length - 1) {
-                    openSwipeTarget(displayedWeekNum, swipeDayOrder[currentIndex + 1]);
-                    return;
-                }
-
-                // Суббота → понедельник следующей учебной недели.
-                if (displayedWeekNum < 18) {
-                    openSwipeTarget(displayedWeekNum + 1, 'monday');
-                }
+            if (!target) {
+                card.classList.remove('swipe-dragging');
+                card.classList.add('swipe-snapback');
+                setTimeout(() => {
+                    clearSwipeCardState(card);
+                    if (swipeCard === card) swipeCard = null;
+                }, 230);
                 return;
             }
 
-            // Обычный переход к предыдущему дню.
-            if (currentIndex > 0) {
-                openSwipeTarget(displayedWeekNum, swipeDayOrder[currentIndex - 1]);
-                return;
-            }
+            swipeSettling = true;
+            card.classList.remove('swipe-dragging', 'swipe-snapback');
+            card.classList.add(direction > 0 ? 'swipe-exit-left' : 'swipe-exit-right');
 
-            // Понедельник → суббота предыдущей учебной недели.
-            if (displayedWeekNum > 1) {
-                openSwipeTarget(displayedWeekNum - 1, 'saturday');
-            }
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const delay = reducedMotion ? 0 : 165;
+            setTimeout(() => {
+                clearSwipeCardState(card);
+                openSwipeTarget(target.week, target.dayId, direction);
+                swipeCard = null;
+                swipeSettling = false;
+            }, delay);
         }
 
         document.querySelector('.container')?.addEventListener('touchstart', event => {
-            if (!window.matchMedia('(max-width: 599px)').matches) return;
-            if (!event.target.closest('.day-card')) return;
-            if (event.touches.length !== 1) return;
+            if (!window.matchMedia('(max-width: 599px)').matches || swipeSettling) return;
+            const card = event.target.closest('.day-card');
+            if (!card || event.touches.length !== 1) return;
 
             swipeStartX = event.touches[0].clientX;
             swipeStartY = event.touches[0].clientY;
+            swipeCurrentX = 0;
             swipeTracking = true;
+            swipeHorizontal = false;
+            swipeCard = card;
+            clearSwipeCardState(card);
+        }, { passive: true });
+
+        document.querySelector('.container')?.addEventListener('touchmove', event => {
+            if (!swipeTracking || !swipeCard || event.touches.length !== 1) return;
+            const touch = event.touches[0];
+            const deltaX = touch.clientX - swipeStartX;
+            const deltaY = touch.clientY - swipeStartY;
+
+            if (!swipeHorizontal) {
+                if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return;
+                if (Math.abs(deltaY) > Math.abs(deltaX) * 1.05) {
+                    swipeTracking = false;
+                    clearSwipeCardState();
+                    swipeCard = null;
+                    return;
+                }
+                if (Math.abs(deltaX) <= Math.abs(deltaY)) return;
+                swipeHorizontal = true;
+                swipeCard.classList.add('swipe-dragging');
+            }
+
+            const maxDrag = Math.min(window.innerWidth * .42, 190);
+            const clampedX = Math.max(-maxDrag, Math.min(maxDrag, deltaX));
+            swipeCurrentX = clampedX;
+            const opacity = Math.max(.72, 1 - Math.abs(clampedX) / Math.max(window.innerWidth, 1) * .42);
+            swipeCard.style.setProperty('--swipe-x', `${clampedX}px`);
+            swipeCard.style.setProperty('--swipe-opacity', String(opacity));
         }, { passive: true });
 
         document.querySelector('.container')?.addEventListener('touchend', event => {
             if (!swipeTracking || !window.matchMedia('(max-width: 599px)').matches) return;
             swipeTracking = false;
             const touch = event.changedTouches[0];
-            if (!touch) return;
+            if (!touch || !swipeCard) return;
 
             const deltaX = touch.clientX - swipeStartX;
             const deltaY = touch.clientY - swipeStartY;
             const minSwipeDistance = 55;
+            const horizontalEnough = Math.abs(deltaX) >= minSwipeDistance && Math.abs(deltaX) > Math.abs(deltaY) * 1.15;
 
-            // Срабатывает только выраженный горизонтальный жест — обычный вертикальный скролл не перехватываем.
-            if (Math.abs(deltaX) < minSwipeDistance || Math.abs(deltaX) <= Math.abs(deltaY) * 1.15) return;
+            if (!swipeHorizontal || !horizontalEnough) {
+                finishSwipe(0, null);
+                return;
+            }
 
-            if (deltaX < 0) moveBySwipe(1);
-            else moveBySwipe(-1);
+            const direction = deltaX < 0 ? 1 : -1;
+            finishSwipe(direction, getSwipeTarget(direction));
         }, { passive: true });
 
         document.querySelector('.container')?.addEventListener('touchcancel', () => {
             swipeTracking = false;
+            if (swipeCard) finishSwipe(0, null);
         }, { passive: true });
 
         document.getElementById('week-toggle').addEventListener('click', () => {
@@ -1837,7 +2139,9 @@
         const colorMenuBtn = document.getElementById('color-menu-btn');
         const colorDropdown = document.getElementById('color-dropdown');
         const colorBtns = document.querySelectorAll('.color-btn');
+        const accentModeBtns = document.querySelectorAll('.accent-mode-btn');
         const savedColor = localStorage.getItem('accent-color') || 'blue';
+        const savedAccentMode = localStorage.getItem('accent-mode') || 'gradient';
         colorMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             colorDropdown.classList.toggle('open');
@@ -1850,11 +2154,25 @@
             localStorage.setItem('accent-color', color);
             colorBtns.forEach(btn => btn.classList.toggle('active-color', btn.getAttribute('data-set-color') === color));
         }
+        function setAccentMode(mode) {
+            const allowed = ['solid', 'gradient', 'animated'];
+            const safeMode = allowed.includes(mode) ? mode : 'gradient';
+            document.body.setAttribute('data-accent-mode', safeMode);
+            localStorage.setItem('accent-mode', safeMode);
+            accentModeBtns.forEach(btn => {
+                const active = btn.getAttribute('data-accent-mode') === safeMode;
+                btn.classList.toggle('active-mode', active);
+                btn.setAttribute('aria-pressed', String(active));
+            });
+        }
         colorBtns.forEach(btn => btn.addEventListener('click', () => {
             setAccentColor(btn.getAttribute('data-set-color'));
-            colorDropdown.classList.remove('open');
+        }));
+        accentModeBtns.forEach(btn => btn.addEventListener('click', () => {
+            setAccentMode(btn.getAttribute('data-accent-mode'));
         }));
         setAccentColor(savedColor);
+        setAccentMode(savedAccentMode);
 
         function setBannerState(state, waitMinutes = null) {
             const banner = document.getElementById('live-banner');
