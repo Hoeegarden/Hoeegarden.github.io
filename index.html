@@ -797,32 +797,66 @@
             display: grid;
             gap: 10px;
         }
-        .changelog-row {
-            padding: 11px 12px;
+        .changelog-loading,
+        .changelog-empty {
+            padding: 12px;
             border: 1px solid var(--border-color);
             border-radius: 13px;
             background: color-mix(in srgb, var(--accent-color) 3%, var(--soft-bg));
-        }
-        .changelog-label {
-            display: block;
             color: var(--secondary-text);
-            font-size: .72rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            margin-bottom: 3px;
+            font-weight: 650;
         }
-        .changelog-value { font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
-        .changelog-note { margin-top: 11px; color: var(--secondary-text); font-size: .8rem; }
-        .changelog-link {
-            display: none;
-            width: fit-content;
-            margin-top: 12px;
+        .changelog-entry {
+            position: relative;
+            padding: 12px 13px 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: color-mix(in srgb, var(--accent-color) 2.5%, var(--soft-bg));
+        }
+        .changelog-entry:first-child {
+            border-color: color-mix(in srgb, var(--accent-color) 30%, var(--border-color));
+            background: color-mix(in srgb, var(--accent-color) 6%, var(--soft-bg));
+            box-shadow: inset 3px 0 0 var(--accent-color);
+        }
+        .changelog-entry-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .changelog-date {
+            color: var(--secondary-text);
+            font-size: .76rem;
+            font-weight: 750;
+        }
+        .changelog-latest {
+            flex: 0 0 auto;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--accent-color) 11%, var(--card-bg));
             color: var(--accent-color);
+            font-size: .66rem;
+            font-weight: 850;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+        .changelog-message {
+            color: var(--text-color);
+            font-weight: 720;
+            line-height: 1.42;
+            overflow-wrap: anywhere;
+        }
+        .changelog-entry-link {
+            display: inline-flex;
+            margin-top: 7px;
+            color: var(--accent-color);
+            font-size: .8rem;
             font-weight: 750;
             text-decoration: none;
         }
-        .changelog-link.visible { display: inline-flex; }
+        .changelog-entry-link:hover { text-decoration: underline; }
+        .changelog-note { margin-top: 11px; color: var(--secondary-text); font-size: .8rem; }
         .changelog-btn {
             width: 38px;
             min-width: 38px;
@@ -1058,18 +1092,10 @@
                 <h2 id="changelog-title" class="changelog-title">📝 Change-log</h2>
                 <button id="changelog-close" class="changelog-close" type="button" aria-label="Закрыть">✕</button>
             </div>
-            <div class="changelog-status">
-                <div class="changelog-row">
-                    <span class="changelog-label">Последнее обновление</span>
-                    <div id="changelog-date" class="changelog-value">Проверяем GitHub…</div>
-                </div>
-                <div class="changelog-row">
-                    <span class="changelog-label">Что изменилось</span>
-                    <div id="changelog-message" class="changelog-value">Загружаем описание последнего коммита…</div>
-                </div>
+            <div id="changelog-list" class="changelog-status">
+                <div class="changelog-loading">Проверяем последние обновления на GitHub…</div>
             </div>
-            <a id="changelog-link" class="changelog-link" href="#" target="_blank" rel="noopener noreferrer">Открыть коммит на GitHub ↗</a>
-            <div id="changelog-note" class="changelog-note">Данные берутся из последнего коммита, изменившего файл страницы.</div>
+            <div id="changelog-note" class="changelog-note">Показываются последние 5 коммитов, изменивших файл страницы.</div>
         </section>
     </div>
 
@@ -1505,13 +1531,12 @@
            Если используется собственный домен, можно вручную указать "owner/repository" ниже. */
         const GITHUB_REPO_OVERRIDE = '';
         const GITHUB_CHANGELOG_CACHE_MS = 10 * 60 * 1000;
+        const GITHUB_CHANGELOG_LIMIT = 5;
 
         const changelogBtn = document.getElementById('changelog-btn');
         const changelogOverlay = document.getElementById('changelog-overlay');
         const changelogClose = document.getElementById('changelog-close');
-        const changelogDate = document.getElementById('changelog-date');
-        const changelogMessage = document.getElementById('changelog-message');
-        const changelogLink = document.getElementById('changelog-link');
+        const changelogList = document.getElementById('changelog-list');
         const changelogNote = document.getElementById('changelog-note');
         let changelogLoaded = false;
 
@@ -1549,18 +1574,58 @@
             });
         }
 
-        function setChangelogData(data) {
-            changelogDate.textContent = formatCommitDate(data.date);
-            changelogMessage.textContent = data.message || 'Описание обновления не указано.';
-            if (data.url) {
-                changelogLink.href = data.url;
-                changelogLink.classList.add('visible');
-            } else {
-                changelogLink.classList.remove('visible');
+        function renderChangelogEntries(entries, path) {
+            changelogList.replaceChildren();
+
+            if (!entries.length) {
+                const empty = document.createElement('div');
+                empty.className = 'changelog-empty';
+                empty.textContent = 'Для этой страницы пока не найдено коммитов.';
+                changelogList.appendChild(empty);
+                return;
             }
-            changelogNote.textContent = data.path
-                ? `Источник: последний коммит, изменивший ${data.path}.`
-                : 'Источник: последний коммит страницы на GitHub.';
+
+            entries.forEach((entry, index) => {
+                const item = document.createElement('article');
+                item.className = 'changelog-entry';
+
+                const head = document.createElement('div');
+                head.className = 'changelog-entry-head';
+
+                const date = document.createElement('time');
+                date.className = 'changelog-date';
+                date.dateTime = entry.date || '';
+                date.textContent = formatCommitDate(entry.date);
+                head.appendChild(date);
+
+                if (index === 0) {
+                    const latest = document.createElement('span');
+                    latest.className = 'changelog-latest';
+                    latest.textContent = 'Последнее';
+                    head.appendChild(latest);
+                }
+
+                const message = document.createElement('div');
+                message.className = 'changelog-message';
+                message.textContent = entry.message || 'Описание обновления не указано.';
+
+                item.append(head, message);
+
+
+                changelogList.appendChild(item);
+            });
+
+            changelogNote.textContent = path
+                ? `Источник: последние ${entries.length} коммитов, изменивших ${path}.`
+                : `Источник: последние ${entries.length} коммитов страницы на GitHub.`;
+        }
+
+        function showChangelogMessage(text) {
+            changelogList.replaceChildren();
+            const block = document.createElement('div');
+            block.className = 'changelog-empty';
+            block.textContent = text;
+            changelogList.appendChild(block);
         }
 
         async function loadChangelog(force = false) {
@@ -1568,31 +1633,28 @@
 
             const repoInfo = getGitHubPageInfo();
             if (!repoInfo) {
-                changelogDate.textContent = 'Репозиторий не определён';
-                changelogMessage.textContent = 'Для собственного домена укажи owner/repository в GITHUB_REPO_OVERRIDE внутри HTML.';
+                showChangelogMessage('Репозиторий не определён. Для собственного домена укажи owner/repository в GITHUB_REPO_OVERRIDE внутри HTML.');
                 changelogNote.textContent = 'На адресах *.github.io репозиторий определяется автоматически.';
-                changelogLink.classList.remove('visible');
                 return;
             }
 
-            const cacheKey = `kfu-changelog:${repoInfo.owner}/${repoInfo.repo}:${repoInfo.path}`;
+            const cacheKey = `kfu-changelog-v2:${repoInfo.owner}/${repoInfo.repo}:${repoInfo.path}:${GITHUB_CHANGELOG_LIMIT}`;
             if (!force) {
                 try {
                     const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-                    if (cached && Date.now() - cached.savedAt < GITHUB_CHANGELOG_CACHE_MS) {
-                        setChangelogData(cached.data);
+                    if (cached && Date.now() - cached.savedAt < GITHUB_CHANGELOG_CACHE_MS && Array.isArray(cached.entries)) {
+                        renderChangelogEntries(cached.entries, repoInfo.path);
                         changelogLoaded = true;
                         return;
                     }
                 } catch (_) {}
             }
 
-            changelogDate.textContent = 'Проверяем GitHub…';
-            changelogMessage.textContent = 'Загружаем описание последнего коммита…';
-            changelogLink.classList.remove('visible');
+            showChangelogMessage('Проверяем последние обновления на GitHub…');
+            changelogNote.textContent = `Загружаем последние ${GITHUB_CHANGELOG_LIMIT} коммитов…`;
 
             try {
-                const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoInfo.owner)}/${encodeURIComponent(repoInfo.repo)}/commits?path=${encodeURIComponent(repoInfo.path)}&per_page=1`;
+                const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoInfo.owner)}/${encodeURIComponent(repoInfo.repo)}/commits?path=${encodeURIComponent(repoInfo.path)}&per_page=${GITHUB_CHANGELOG_LIMIT}`;
                 const response = await fetch(apiUrl, {
                     headers: { 'Accept': 'application/vnd.github+json' }
                 });
@@ -1600,24 +1662,23 @@
 
                 const commits = await response.json();
                 if (!Array.isArray(commits) || !commits.length) throw new Error('Коммиты не найдены');
-                const commit = commits[0];
-                const fullMessage = commit?.commit?.message || '';
-                const firstLine = fullMessage.split('\n')[0].trim();
-                const data = {
-                    date: commit?.commit?.committer?.date || commit?.commit?.author?.date,
-                    message: firstLine || 'Описание обновления не указано.',
-                    url: commit?.html_url || '',
-                    path: repoInfo.path
-                };
 
-                setChangelogData(data);
+                const entries = commits.slice(0, GITHUB_CHANGELOG_LIMIT).map(commit => {
+                    const fullMessage = commit?.commit?.message || '';
+                    const firstLine = fullMessage.split('\n')[0].trim();
+                    return {
+                        date: commit?.commit?.committer?.date || commit?.commit?.author?.date || '',
+                        message: firstLine || 'Описание обновления не указано.',
+                        url: commit?.html_url || ''
+                    };
+                });
+
+                renderChangelogEntries(entries, repoInfo.path);
                 changelogLoaded = true;
-                try { localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), data })); } catch (_) {}
+                try { localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), entries })); } catch (_) {}
             } catch (error) {
-                changelogDate.textContent = 'Не удалось проверить';
-                changelogMessage.textContent = 'GitHub API сейчас недоступен. Само расписание продолжает работать.';
+                showChangelogMessage('Не удалось загрузить журнал обновлений. GitHub API сейчас недоступен, но само расписание продолжает работать.');
                 changelogNote.textContent = 'Попробуй открыть Change-log позже.';
-                changelogLink.classList.remove('visible');
                 console.warn('Change-log:', error);
             }
         }
