@@ -1459,43 +1459,60 @@
         let swipeTracking = false;
 
         function getActiveDayId() {
-            return document.querySelector('.tab-btn.active')?.dataset.day || null;
+            // Надёжнее определять реально открытую карточку, а не полагаться только на класс active у вкладки.
+            const visibleCard = Array.from(document.querySelectorAll('.day-card')).find(card => {
+                const style = window.getComputedStyle(card);
+                return style.display !== 'none';
+            });
+            return visibleCard?.id || document.querySelector('.tab-btn.active')?.dataset.day || null;
+        }
+
+        function openSwipeTarget(targetWeek, targetDayId) {
+            if (targetWeek < 1 || targetWeek > 18) return;
+
+            displayedWeekNum = targetWeek;
+            displayedParity = displayedWeekNum % 2 === 0 ? 'even' : 'odd';
+            isAllScheduleMode = false;
+
+            // Сначала полностью обновляем выбранную неделю, затем открываем нужный день.
+            updateScheduleUI();
+            const targetBtn = document.querySelector(`.tab-btn[data-day="${targetDayId}"]`);
+            showDay(targetDayId, targetBtn);
+            updateLiveStatus();
+            targetBtn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
 
         function moveBySwipe(direction) {
             if (!window.matchMedia('(max-width: 599px)').matches) return;
+
             const currentDayId = getActiveDayId();
             const currentIndex = swipeDayOrder.indexOf(currentDayId);
             if (currentIndex === -1) return;
 
-            let targetIndex = currentIndex + direction;
-            let targetWeek = displayedWeekNum;
+            if (direction > 0) {
+                // Обычный переход к следующему дню.
+                if (currentIndex < swipeDayOrder.length - 1) {
+                    openSwipeTarget(displayedWeekNum, swipeDayOrder[currentIndex + 1]);
+                    return;
+                }
 
-            // После субботы переходим на понедельник следующей недели.
-            if (targetIndex >= swipeDayOrder.length) {
-                if (displayedWeekNum >= 18) return;
-                targetWeek = displayedWeekNum + 1;
-                targetIndex = 0;
+                // Суббота → понедельник следующей учебной недели.
+                if (displayedWeekNum < 18) {
+                    openSwipeTarget(displayedWeekNum + 1, 'monday');
+                }
+                return;
             }
 
-            // С понедельника назад переходим на субботу предыдущей недели.
-            if (targetIndex < 0) {
-                if (displayedWeekNum <= 1) return;
-                targetWeek = displayedWeekNum - 1;
-                targetIndex = swipeDayOrder.length - 1;
+            // Обычный переход к предыдущему дню.
+            if (currentIndex > 0) {
+                openSwipeTarget(displayedWeekNum, swipeDayOrder[currentIndex - 1]);
+                return;
             }
 
-            if (targetWeek !== displayedWeekNum) {
-                displayedWeekNum = targetWeek;
-                displayedParity = displayedWeekNum % 2 === 0 ? 'even' : 'odd';
-                updateScheduleUI();
-                updateLiveStatus();
+            // Понедельник → суббота предыдущей учебной недели.
+            if (displayedWeekNum > 1) {
+                openSwipeTarget(displayedWeekNum - 1, 'saturday');
             }
-
-            const nextDayId = swipeDayOrder[targetIndex];
-            const nextBtn = document.querySelector(`.tab-btn[data-day="${nextDayId}"]`);
-            showDay(nextDayId, nextBtn);
-            nextBtn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
 
         document.querySelector('.container')?.addEventListener('touchstart', event => {
