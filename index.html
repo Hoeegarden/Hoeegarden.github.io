@@ -181,7 +181,7 @@
         .color-btn.yellow { background-color: #d29922; }
         .color-btn.purple { background-color: #8250df; }
 
-        /* Настройка характера акцента: обычный / градиент / плавный перелив. */
+        /* Настройки цвета акцента. Градиент используется постоянно. */
         .color-picker-dropdown {
             width: min(300px, calc(100vw - 24px));
             flex-direction: column;
@@ -194,111 +194,17 @@
             justify-content: center;
             gap: 10px;
         }
-        .accent-mode-panel {
-            padding-top: 10px;
-            border-top: 1px solid var(--border-color);
-        }
-        .accent-mode-label {
-            display: block;
-            margin-bottom: 7px;
-            color: var(--secondary-text);
-            font-size: .72rem;
-            font-weight: 800;
-            letter-spacing: .025em;
-            text-transform: uppercase;
-        }
-        .accent-mode-options {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 5px;
-        }
-        .accent-mode-btn:last-child:nth-child(odd) { grid-column: 1 / -1; }
-        .accent-mode-btn {
-            min-width: 0;
-            padding: 7px 5px;
-            border: 1px solid var(--btn-border);
-            border-radius: 10px;
-            background: var(--btn-bg);
-            color: var(--secondary-text);
-            cursor: pointer;
-            font: inherit;
-            font-size: .68rem;
-            font-weight: 800;
-            line-height: 1.15;
-        }
-        .accent-mode-btn:hover { border-color: color-mix(in srgb, var(--accent-color) 45%, var(--btn-border)); }
-        .accent-mode-btn.active-mode {
-            color: var(--accent-color);
-            border-color: color-mix(in srgb, var(--accent-color) 42%, var(--btn-border));
-            background: color-mix(in srgb, var(--accent-color) 8%, var(--btn-bg));
-            box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-color) 8%, transparent);
-        }
-
-
-
-        /* ============================================================
-           Акцентные режимы: Обычный / Градиент / Перелив
-           ============================================================ */
-
-        @keyframes accentGradientFlow {
-            from { background-position: 0% 50%; }
-            to   { background-position: 200% 50%; }
-        }
-
-        body[data-accent-mode="solid"] .live-banner {
-            background: var(--accent-color);
-        }
-
-        body[data-accent-mode="gradient"] .live-banner {
+        /* Градиент — единственный стиль акцента. */
+        .tab-btn.active,
+        #all-schedule-btn.active-mode,
+        .mobile-nav-btn.active-mode {
+            color: #fff;
+            border-color: transparent;
             background: linear-gradient(
                 125deg,
                 var(--accent-gradient-start),
                 var(--accent-gradient-end)
             );
-        }
-
-        body[data-accent-mode="animated"] .live-banner {
-            background:
-                linear-gradient(
-                    120deg,
-                    var(--accent-gradient-start),
-                    var(--accent-gradient-end),
-                    var(--accent-gradient-start)
-                );
-            background-size: 200% 100%;
-            background-repeat: repeat-x;
-            animation: bannerIn .38s ease both, accentGradientFlow 8s linear infinite;
-        }
-
-        body[data-accent-mode="gradient"] .tab-btn.active,
-        body[data-accent-mode="gradient"] #all-schedule-btn.active-mode,
-        body[data-accent-mode="gradient"] .mobile-nav-btn.active-mode,
-        body[data-accent-mode="animated"] .tab-btn.active,
-        body[data-accent-mode="animated"] #all-schedule-btn.active-mode,
-        body[data-accent-mode="animated"] .mobile-nav-btn.active-mode {
-            color: #fff;
-            border-color: transparent;
-            background:
-                linear-gradient(
-                    125deg,
-                    var(--accent-gradient-start),
-                    var(--accent-gradient-end)
-                );
-        }
-
-        body[data-accent-mode="animated"] .tab-btn.active,
-        body[data-accent-mode="animated"] #all-schedule-btn.active-mode,
-        body[data-accent-mode="animated"] .mobile-nav-btn.active-mode {
-            background:
-                linear-gradient(
-                    120deg,
-                    var(--accent-gradient-start),
-                    var(--accent-gradient-end),
-                    var(--accent-gradient-start)
-                );
-            background-size: 200% 100%;
-            background-repeat: repeat-x;
-            animation: accentGradientFlow 8s linear infinite;
         }
 
         .live-banner {
@@ -627,7 +533,7 @@
             .mobile-nav-btn.is-current { color: var(--accent-color); background: color-mix(in srgb, var(--accent-color) 8%, transparent); }
         }
 
-        /* Плавный визуальный отклик при свайпе между днями. */
+        /* Мягкий "резиновый" swipe-feedback на мобильных. */
         .swipe-indicator {
             position: fixed;
             left: 50%;
@@ -650,9 +556,10 @@
             opacity: 0;
             visibility: hidden;
             transform: translate(-50%, 8px) scale(.97);
-            transition: opacity .18s ease, transform .22s cubic-bezier(.2,.8,.2,1), visibility .18s ease;
+            transition: opacity .18s ease, transform .26s cubic-bezier(.22,.8,.24,1), visibility .18s ease;
             pointer-events: none;
         }
+
         .swipe-indicator.show {
             opacity: 1;
             visibility: visible;
@@ -663,36 +570,45 @@
             .day-card.swipe-dragging {
                 animation: none !important;
                 transition: none !important;
-                transform: translate3d(var(--swipe-x, 0px), 0, 0);
+                transform:
+                    translate3d(var(--swipe-x, 0px), var(--swipe-y, 0px), 0)
+                    scale(var(--swipe-scale, 1))
+                    rotate(var(--swipe-rotate, 0deg));
                 opacity: var(--swipe-opacity, 1);
-                will-change: transform, opacity;
+                box-shadow: 0 14px 34px rgba(0,0,0,var(--swipe-shadow, .08)), var(--shadow-soft);
+                will-change: transform, opacity, box-shadow;
+                backface-visibility: hidden;
+                -webkit-backface-visibility: hidden;
             }
+
             .day-card.swipe-snapback {
                 animation: none !important;
-                transition: transform .22s cubic-bezier(.2,.8,.2,1), opacity .22s ease !important;
-                transform: translate3d(0,0,0);
+                transition:
+                    transform .34s cubic-bezier(.18,.88,.24,1.08),
+                    opacity .26s ease,
+                    box-shadow .30s ease !important;
+                transform: translate3d(0,0,0) scale(1) rotate(0deg);
                 opacity: 1;
+                box-shadow: var(--shadow-soft);
             }
-            .day-card.swipe-exit-left { animation: swipeExitLeft .17s ease-out both !important; }
-            .day-card.swipe-exit-right { animation: swipeExitRight .17s ease-out both !important; }
-            .day-card.swipe-enter-right { animation: swipeEnterRight .25s cubic-bezier(.2,.8,.2,1) both !important; }
-            .day-card.swipe-enter-left { animation: swipeEnterLeft .25s cubic-bezier(.2,.8,.2,1) both !important; }
+
+            .day-card.swipe-enter-right {
+                animation: swipeEnterRight .32s cubic-bezier(.16,.82,.24,1) both !important;
+            }
+
+            .day-card.swipe-enter-left {
+                animation: swipeEnterLeft .32s cubic-bezier(.16,.82,.24,1) both !important;
+            }
         }
-        @keyframes swipeExitLeft {
-            from { transform: translate3d(var(--swipe-x, 0px),0,0); opacity: var(--swipe-opacity, 1); }
-            to { transform: translate3d(-115%,0,0); opacity: .16; }
-        }
-        @keyframes swipeExitRight {
-            from { transform: translate3d(var(--swipe-x, 0px),0,0); opacity: var(--swipe-opacity, 1); }
-            to { transform: translate3d(115%,0,0); opacity: .16; }
-        }
+
         @keyframes swipeEnterRight {
-            from { transform: translate3d(28px,0,0); opacity: .25; }
-            to { transform: translate3d(0,0,0); opacity: 1; }
+            from { transform: translate3d(42px,0,0) scale(.985); opacity: .42; }
+            to { transform: translate3d(0,0,0) scale(1); opacity: 1; }
         }
+
         @keyframes swipeEnterLeft {
-            from { transform: translate3d(-28px,0,0); opacity: .25; }
-            to { transform: translate3d(0,0,0); opacity: 1; }
+            from { transform: translate3d(-42px,0,0) scale(.985); opacity: .42; }
+            to { transform: translate3d(0,0,0) scale(1); opacity: 1; }
         }
 
 
@@ -702,13 +618,6 @@
                 animation-iteration-count: 1 !important;
                 scroll-behavior: auto !important;
                 transition-duration: .01ms !important;
-            }
-
-            body[data-accent-mode="animated"] .live-banner,
-            body[data-accent-mode="animated"] .tab-btn.active,
-            body[data-accent-mode="animated"] #all-schedule-btn.active-mode,
-            body[data-accent-mode="animated"] .mobile-nav-btn.active-mode {
-                animation: none !important;
             }
 
             .swipe-indicator { transition: none !important; }
@@ -1083,7 +992,7 @@
 
 </style>
 </head>
-<body data-accent-mode="gradient">
+<body>
     <div class="container">
         <div class="header">
             <div class="brand">
@@ -1105,14 +1014,6 @@
                                 <button class="color-btn green" data-set-color="green" type="button" title="Зелёный" aria-label="Зелёный цвет"></button>
                                 <button class="color-btn yellow" data-set-color="yellow" type="button" title="Жёлтый" aria-label="Жёлтый цвет"></button>
                                 <button class="color-btn purple" data-set-color="purple" type="button" title="Фиолетовый" aria-label="Фиолетовый цвет"></button>
-                            </div>
-                            <div class="accent-mode-panel">
-                                <span class="accent-mode-label">Стиль акцента</span>
-                                <div class="accent-mode-options" role="group" aria-label="Стиль акцента">
-                                    <button class="accent-mode-btn" data-accent-mode="solid" type="button" title="Обычный однотонный акцент">● Обычный</button>
-                                    <button class="accent-mode-btn" data-accent-mode="gradient" type="button" title="Статичный градиент">◐ Градиент</button>
-                                    <button class="accent-mode-btn" data-accent-mode="animated" type="button" title="Плавное переливание градиента">✨ Перелив</button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -1669,16 +1570,23 @@
         }
 
         // Свайпы между днями на мобильных устройствах.
-        // Карточка следует за пальцем, а на границе недели Сб ↔ Пн меняется и учебная неделя.
+        // Карточка движется с лёгким сопротивлением, учитывает скорость жеста
+        // и мягко возвращается или продолжает движение после отпускания пальца.
         const swipeDayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
         let swipeStartX = 0;
         let swipeStartY = 0;
-        let swipeCurrentX = 0;
+        let swipeRawX = 0;
+        let swipeRenderedX = 0;
         let swipeTracking = false;
         let swipeHorizontal = false;
         let swipeCard = null;
         let swipeSettling = false;
         let swipeIndicatorTimer = null;
+        let swipeLastX = 0;
+        let swipeLastTime = 0;
+        let swipeVelocityX = 0;
+        let swipeFrame = 0;
 
         function getActiveDayId() {
             const visibleCard = Array.from(document.querySelectorAll('.day-card')).find(card => {
@@ -1697,35 +1605,91 @@
                 if (currentIndex < swipeDayOrder.length - 1) {
                     return { week: displayedWeekNum, dayId: swipeDayOrder[currentIndex + 1] };
                 }
-                if (displayedWeekNum < 18) return { week: displayedWeekNum + 1, dayId: 'monday' };
+                if (displayedWeekNum < 18) {
+                    return { week: displayedWeekNum + 1, dayId: 'monday' };
+                }
                 return null;
             }
 
             if (currentIndex > 0) {
                 return { week: displayedWeekNum, dayId: swipeDayOrder[currentIndex - 1] };
             }
-            if (displayedWeekNum > 1) return { week: displayedWeekNum - 1, dayId: 'saturday' };
+            if (displayedWeekNum > 1) {
+                return { week: displayedWeekNum - 1, dayId: 'saturday' };
+            }
             return null;
         }
 
         function showSwipeIndicator(dayId, weekNum) {
             const indicator = document.getElementById('swipe-indicator');
             if (!indicator || !window.matchMedia('(max-width: 599px)').matches) return;
+
             const date = getDateForWeekDay(weekNum, dayId);
             const dateText = date ? ` • ${formatLongDate(date)}` : '';
             indicator.textContent = `${fullDayNames[dayId] || dayId}${dateText} • ${weekNum} неделя`;
+
             indicator.classList.remove('show');
             void indicator.offsetWidth;
             indicator.classList.add('show');
+
             clearTimeout(swipeIndicatorTimer);
-            swipeIndicatorTimer = setTimeout(() => indicator.classList.remove('show'), 900);
+            swipeIndicatorTimer = setTimeout(() => indicator.classList.remove('show'), 1050);
+        }
+
+        function resetSwipeVariables(card = swipeCard) {
+            if (!card) return;
+            card.style.removeProperty('--swipe-x');
+            card.style.removeProperty('--swipe-y');
+            card.style.removeProperty('--swipe-scale');
+            card.style.removeProperty('--swipe-rotate');
+            card.style.removeProperty('--swipe-opacity');
+            card.style.removeProperty('--swipe-shadow');
         }
 
         function clearSwipeCardState(card = swipeCard) {
             if (!card) return;
-            card.classList.remove('swipe-dragging', 'swipe-snapback', 'swipe-exit-left', 'swipe-exit-right');
-            card.style.removeProperty('--swipe-x');
-            card.style.removeProperty('--swipe-opacity');
+            card.classList.remove('swipe-dragging', 'swipe-snapback', 'swipe-enter-left', 'swipe-enter-right');
+            resetSwipeVariables(card);
+            card.getAnimations().forEach(animation => animation.cancel());
+        }
+
+        function rubberBandDistance(delta) {
+            const viewport = Math.max(window.innerWidth, 320);
+            const limit = Math.min(viewport * .50, 230);
+            const sign = Math.sign(delta);
+            const abs = Math.abs(delta);
+            const resisted = limit * (1 - Math.exp(-abs / (limit * .78)));
+            return sign * resisted;
+        }
+
+        function renderSwipeNow() {
+            if (!swipeCard || !swipeHorizontal) return;
+
+            const x = rubberBandDistance(swipeRawX);
+            swipeRenderedX = x;
+
+            const viewport = Math.max(window.innerWidth, 1);
+            const progress = Math.min(Math.abs(x) / (viewport * .52), 1);
+            const scale = 1 - progress * .018;
+            const rotate = (x / viewport) * 1.55;
+            const y = Math.sin(progress * Math.PI) * 1.4;
+            const opacity = 1 - progress * .11;
+            const shadow = .08 + progress * .10;
+
+            swipeCard.style.setProperty('--swipe-x', `${x.toFixed(2)}px`);
+            swipeCard.style.setProperty('--swipe-y', `${y.toFixed(2)}px`);
+            swipeCard.style.setProperty('--swipe-scale', scale.toFixed(4));
+            swipeCard.style.setProperty('--swipe-rotate', `${rotate.toFixed(3)}deg`);
+            swipeCard.style.setProperty('--swipe-opacity', opacity.toFixed(3));
+            swipeCard.style.setProperty('--swipe-shadow', shadow.toFixed(3));
+        }
+
+        function scheduleSwipeRender() {
+            if (swipeFrame || !swipeCard) return;
+            swipeFrame = requestAnimationFrame(() => {
+                swipeFrame = 0;
+                renderSwipeNow();
+            });
         }
 
         function openSwipeTarget(targetWeek, targetDayId, enterDirection = 0) {
@@ -1740,7 +1704,9 @@
             showDay(targetDayId, targetBtn);
 
             const newCard = document.getElementById(targetDayId);
-            if (newCard && enterDirection !== 0 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            if (newCard && enterDirection !== 0 && !reducedMotion) {
                 const cls = enterDirection > 0 ? 'swipe-enter-right' : 'swipe-enter-left';
                 newCard.classList.remove('swipe-enter-right', 'swipe-enter-left');
                 void newCard.offsetWidth;
@@ -1749,92 +1715,182 @@
             }
 
             updateLiveStatus();
-            targetBtn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            targetBtn?.scrollIntoView({
+                behavior: reducedMotion ? 'auto' : 'smooth',
+                inline: 'center',
+                block: 'nearest'
+            });
             showSwipeIndicator(targetDayId, targetWeek);
         }
 
-        function finishSwipe(direction, target) {
-            if (swipeSettling) return;
-            const card = swipeCard;
-            if (!card) return;
+        function animateSwipeBack(card) {
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-            if (!target) {
-                card.classList.remove('swipe-dragging');
-                card.classList.add('swipe-snapback');
-                setTimeout(() => {
-                    clearSwipeCardState(card);
-                    if (swipeCard === card) swipeCard = null;
-                }, 230);
-                return;
-            }
+            card.classList.remove('swipe-dragging');
+            card.classList.add('swipe-snapback');
 
+            const delay = reducedMotion ? 0 : 350;
+            setTimeout(() => {
+                card.classList.remove('swipe-snapback');
+                resetSwipeVariables(card);
+                if (swipeCard === card) swipeCard = null;
+            }, delay);
+        }
+
+        function animateSwipeOut(card, direction, target) {
             swipeSettling = true;
             card.classList.remove('swipe-dragging', 'swipe-snapback');
-            card.classList.add(direction > 0 ? 'swipe-exit-left' : 'swipe-exit-right');
 
             const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const delay = reducedMotion ? 0 : 165;
-            setTimeout(() => {
+            if (reducedMotion) {
                 clearSwipeCardState(card);
                 openSwipeTarget(target.week, target.dayId, direction);
                 swipeCard = null;
                 swipeSettling = false;
-            }, delay);
+                return;
+            }
+
+            const viewport = Math.max(window.innerWidth, 320);
+            const destinationX = direction > 0 ? -viewport * 1.06 : viewport * 1.06;
+            const currentX = swipeRenderedX;
+            const currentProgress = Math.min(Math.abs(currentX) / (viewport * .52), 1);
+            const currentScale = 1 - currentProgress * .018;
+            const currentRotate = (currentX / viewport) * 1.55;
+
+            const speed = Math.min(Math.abs(swipeVelocityX), 1.8);
+            const duration = Math.round(Math.max(175, Math.min(285, 285 - speed * 70)));
+
+            const animation = card.animate(
+                [
+                    {
+                        transform: `translate3d(${currentX}px, 0, 0) scale(${currentScale}) rotate(${currentRotate}deg)`,
+                        opacity: getComputedStyle(card).opacity
+                    },
+                    {
+                        transform: `translate3d(${destinationX}px, 2px, 0) scale(.972) rotate(${direction > 0 ? -1.4 : 1.4}deg)`,
+                        opacity: .12
+                    }
+                ],
+                {
+                    duration,
+                    easing: 'cubic-bezier(.18,.78,.24,1)',
+                    fill: 'forwards'
+                }
+            );
+
+            animation.finished
+                .catch(() => {})
+                .finally(() => {
+                    animation.cancel();
+                    clearSwipeCardState(card);
+                    openSwipeTarget(target.week, target.dayId, direction);
+                    swipeCard = null;
+                    swipeSettling = false;
+                });
+        }
+
+        function finishSwipe(direction, target) {
+            if (swipeSettling || !swipeCard) return;
+
+            const card = swipeCard;
+            if (!target || direction === 0) {
+                animateSwipeBack(card);
+                return;
+            }
+
+            animateSwipeOut(card, direction, target);
         }
 
         document.querySelector('.container')?.addEventListener('touchstart', event => {
             if (!window.matchMedia('(max-width: 599px)').matches || swipeSettling) return;
+
             const card = event.target.closest('.day-card');
             if (!card || event.touches.length !== 1) return;
 
-            swipeStartX = event.touches[0].clientX;
-            swipeStartY = event.touches[0].clientY;
-            swipeCurrentX = 0;
+            if (swipeFrame) {
+                cancelAnimationFrame(swipeFrame);
+                swipeFrame = 0;
+            }
+
+            const touch = event.touches[0];
+            const now = performance.now();
+
+            swipeStartX = touch.clientX;
+            swipeStartY = touch.clientY;
+            swipeRawX = 0;
+            swipeRenderedX = 0;
             swipeTracking = true;
             swipeHorizontal = false;
             swipeCard = card;
+            swipeLastX = touch.clientX;
+            swipeLastTime = now;
+            swipeVelocityX = 0;
+
             clearSwipeCardState(card);
         }, { passive: true });
 
         document.querySelector('.container')?.addEventListener('touchmove', event => {
             if (!swipeTracking || !swipeCard || event.touches.length !== 1) return;
+
             const touch = event.touches[0];
             const deltaX = touch.clientX - swipeStartX;
             const deltaY = touch.clientY - swipeStartY;
 
             if (!swipeHorizontal) {
-                if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return;
-                if (Math.abs(deltaY) > Math.abs(deltaX) * 1.05) {
+                if (Math.abs(deltaX) < 7 && Math.abs(deltaY) < 7) return;
+
+                if (Math.abs(deltaY) > Math.abs(deltaX) * 1.08) {
                     swipeTracking = false;
                     clearSwipeCardState();
                     swipeCard = null;
                     return;
                 }
+
                 if (Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
                 swipeHorizontal = true;
                 swipeCard.classList.add('swipe-dragging');
             }
 
-            const maxDrag = Math.min(window.innerWidth * .42, 190);
-            const clampedX = Math.max(-maxDrag, Math.min(maxDrag, deltaX));
-            swipeCurrentX = clampedX;
-            const opacity = Math.max(.72, 1 - Math.abs(clampedX) / Math.max(window.innerWidth, 1) * .42);
-            swipeCard.style.setProperty('--swipe-x', `${clampedX}px`);
-            swipeCard.style.setProperty('--swipe-opacity', String(opacity));
+            const now = performance.now();
+            const dt = Math.max(now - swipeLastTime, 1);
+            const instantVelocity = (touch.clientX - swipeLastX) / dt;
+
+            swipeVelocityX = swipeVelocityX * .68 + instantVelocity * .32;
+            swipeLastX = touch.clientX;
+            swipeLastTime = now;
+            swipeRawX = deltaX;
+
+            scheduleSwipeRender();
         }, { passive: true });
 
         document.querySelector('.container')?.addEventListener('touchend', event => {
             if (!swipeTracking || !window.matchMedia('(max-width: 599px)').matches) return;
+
             swipeTracking = false;
+
+            if (swipeFrame) {
+                cancelAnimationFrame(swipeFrame);
+                swipeFrame = 0;
+                renderSwipeNow();
+            }
+
             const touch = event.changedTouches[0];
             if (!touch || !swipeCard) return;
 
             const deltaX = touch.clientX - swipeStartX;
             const deltaY = touch.clientY - swipeStartY;
-            const minSwipeDistance = 55;
-            const horizontalEnough = Math.abs(deltaX) >= minSwipeDistance && Math.abs(deltaX) > Math.abs(deltaY) * 1.15;
 
-            if (!swipeHorizontal || !horizontalEnough) {
+            const distanceEnough =
+                Math.abs(deltaX) >= 68 &&
+                Math.abs(deltaX) > Math.abs(deltaY) * 1.12;
+
+            const fastFlick =
+                Math.abs(deltaX) >= 28 &&
+                Math.abs(swipeVelocityX) >= .48 &&
+                Math.sign(swipeVelocityX) === Math.sign(deltaX);
+
+            if (!swipeHorizontal || (!distanceEnough && !fastFlick)) {
                 finishSwipe(0, null);
                 return;
             }
@@ -1845,6 +1901,10 @@
 
         document.querySelector('.container')?.addEventListener('touchcancel', () => {
             swipeTracking = false;
+            if (swipeFrame) {
+                cancelAnimationFrame(swipeFrame);
+                swipeFrame = 0;
+            }
             if (swipeCard) finishSwipe(0, null);
         }, { passive: true });
 
@@ -2139,40 +2199,33 @@
         const colorMenuBtn = document.getElementById('color-menu-btn');
         const colorDropdown = document.getElementById('color-dropdown');
         const colorBtns = document.querySelectorAll('.color-btn');
-        const accentModeBtns = document.querySelectorAll('.accent-mode-btn');
         const savedColor = localStorage.getItem('accent-color') || 'blue';
-        const savedAccentMode = localStorage.getItem('accent-mode') || 'gradient';
+
         colorMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             colorDropdown.classList.toggle('open');
         });
+
         document.addEventListener('click', (e) => {
-            if (!colorDropdown.contains(e.target) && e.target !== colorMenuBtn) colorDropdown.classList.remove('open');
+            if (!colorDropdown.contains(e.target) && e.target !== colorMenuBtn) {
+                colorDropdown.classList.remove('open');
+            }
         });
+
         function setAccentColor(color) {
             document.body.setAttribute('data-color', color);
             localStorage.setItem('accent-color', color);
-            colorBtns.forEach(btn => btn.classList.toggle('active-color', btn.getAttribute('data-set-color') === color));
-        }
-        function setAccentMode(mode) {
-            const allowed = ['solid', 'gradient', 'animated'];
-            const safeMode = allowed.includes(mode) ? mode : 'gradient';
-            document.body.setAttribute('data-accent-mode', safeMode);
-            localStorage.setItem('accent-mode', safeMode);
-            accentModeBtns.forEach(btn => {
-                const active = btn.getAttribute('data-accent-mode') === safeMode;
-                btn.classList.toggle('active-mode', active);
-                btn.setAttribute('aria-pressed', String(active));
+            colorBtns.forEach(btn => {
+                btn.classList.toggle('active-color', btn.getAttribute('data-set-color') === color);
             });
         }
+
         colorBtns.forEach(btn => btn.addEventListener('click', () => {
             setAccentColor(btn.getAttribute('data-set-color'));
         }));
-        accentModeBtns.forEach(btn => btn.addEventListener('click', () => {
-            setAccentMode(btn.getAttribute('data-accent-mode'));
-        }));
+
         setAccentColor(savedColor);
-        setAccentMode(savedAccentMode);
+        localStorage.removeItem('accent-mode');
 
         function setBannerState(state, waitMinutes = null) {
             const banner = document.getElementById('live-banner');
