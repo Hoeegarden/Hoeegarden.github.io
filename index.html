@@ -1538,6 +1538,13 @@
         const changelogList = document.getElementById('changelog-list');
         const changelogNote = document.getElementById('changelog-note');
 
+        // Кэш только на время текущей загрузки страницы. Ничего не пишем в localStorage:
+        // тема и цвет продолжают сохраняться отдельно, а GitHub API вызывается максимум один раз за загрузку страницы.
+        let changelogSessionEntries = null;
+        let changelogSessionPath = '';
+        let changelogSessionError = '';
+        let changelogLoadPromise = null;
+
         function getGitHubPageInfo() {
             if (GITHUB_REPO_OVERRIDE.trim()) {
                 const parts = GITHUB_REPO_OVERRIDE.trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\/$/, '').split('/');
@@ -1627,9 +1634,27 @@
         }
 
         async function loadChangelog() {
+            // Уже получили данные в рамках этой загрузки страницы — повторно GitHub не спрашиваем.
+            if (changelogSessionEntries) {
+                renderChangelogEntries(changelogSessionEntries, changelogSessionPath);
+                return;
+            }
+
+            // Если запрос уже выполняется, повторное открытие окна ждёт тот же самый запрос.
+            if (changelogLoadPromise) {
+                await changelogLoadPromise;
+                if (changelogSessionEntries) renderChangelogEntries(changelogSessionEntries, changelogSessionPath);
+                else if (changelogSessionError) {
+                    showChangelogMessage(changelogSessionError);
+                    changelogNote.textContent = 'Обнови страницу, чтобы попробовать запросить GitHub снова.';
+                }
+                return;
+            }
+
             const repoInfo = getGitHubPageInfo();
             if (!repoInfo) {
-                showChangelogMessage('Репозиторий не определён. Для собственного домена укажи owner/repository в GITHUB_REPO_OVERRIDE внутри HTML.');
+                changelogSessionError = 'Репозиторий не определён. Для собственного домена укажи owner/repository в GITHUB_REPO_OVERRIDE внутри HTML.';
+                showChangelogMessage(changelogSessionError);
                 changelogNote.textContent = 'На адресах *.github.io репозиторий определяется автоматически.';
                 return;
             }
@@ -1637,34 +1662,41 @@
             showChangelogMessage('Проверяем последние обновления на GitHub…');
             changelogNote.textContent = `Загружаем последние ${GITHUB_CHANGELOG_LIMIT} коммитов…`;
 
-            try {
-                const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoInfo.owner)}/${encodeURIComponent(repoInfo.repo)}/commits?path=${encodeURIComponent(repoInfo.path)}&per_page=${GITHUB_CHANGELOG_LIMIT}`;
-                const response = await fetch(apiUrl, {
-                    headers: {
-                        'Accept': 'application/vnd.github+json',
-                        'Cache-Control': 'no-cache'
-                    },
-                    cache: 'no-store'
-                });
-                if (!response.ok) throw new Error(`GitHub API: ${response.status}`);
+            changelogLoadPromise = (async () => {
+                try {
+                    const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoInfo.owner)}/${encodeURIComponent(repoInfo.repo)}/commits?path=${encodeURIComponent(repoInfo.path)}&per_page=${GITHUB_CHANGELOG_LIMIT}`;
+                    const response = await fetch(apiUrl, {
+                        headers: { 'Accept': 'application/vnd.github+json' },
+                        cache: 'no-store'
+                    });
+                    if (!response.ok) throw new Error(`GitHub API: ${response.status}`);
 
-                const commits = await response.json();
-                if (!Array.isArray(commits) || !commits.length) throw new Error('Коммиты не найдены');
+                    const commits = await response.json();
+                    if (!Array.isArray(commits) || !commits.length) throw new Error('Коммиты не найдены');
 
-                const entries = commits.slice(0, GITHUB_CHANGELOG_LIMIT).map(commit => {
-                    const fullMessage = commit?.commit?.message || '';
-                    const firstLine = fullMessage.split('\n')[0].trim();
-                    return {
-                        date: commit?.commit?.committer?.date || commit?.commit?.author?.date || '',
-                        message: firstLine || 'Описание обновления не указано.'
-                    };
-                });
+                    changelogSessionEntries = commits.slice(0, GITHUB_CHANGELOG_LIMIT).map(commit => {
+                        const fullMessage = commit?.commit?.message || '';
+                        const firstLine = fullMessage.split('\n')[0].trim();
+                        return {
+                            date: commit?.commit?.committer?.date || commit?.commit?.author?.date || '',
+                            message: firstLine || 'Описание обновления не указано.'
+                        };
+                    });
+                    changelogSessionPath = repoInfo.path;
+                    changelogSessionError = '';
+                } catch (error) {
+                    changelogSessionError = 'Не удалось загрузить журнал обновлений. GitHub API сейчас недоступен, но само расписание продолжает работать.';
+                    console.warn('Change-log:', error);
+                }
+            })();
 
-                renderChangelogEntries(entries, repoInfo.path);
-            } catch (error) {
-                showChangelogMessage('Не удалось загрузить журнал обновлений. GitHub API сейчас недоступен, но само расписание продолжает работать.');
-                changelogNote.textContent = 'Попробуй открыть Change-log позже.';
-                console.warn('Change-log:', error);
+            await changelogLoadPromise;
+
+            if (changelogSessionEntries) {
+                renderChangelogEntries(changelogSessionEntries, changelogSessionPath);
+            } else {
+                showChangelogMessage(changelogSessionError);
+                changelogNote.textContent = 'Обнови страницу, чтобы попробовать запросить GitHub снова.';
             }
         }
 
