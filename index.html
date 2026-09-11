@@ -1468,10 +1468,31 @@
             const currentIndex = swipeDayOrder.indexOf(currentDayId);
             if (currentIndex === -1) return;
 
-            const nextIndex = currentIndex + direction;
-            if (nextIndex < 0 || nextIndex >= swipeDayOrder.length) return;
+            let targetIndex = currentIndex + direction;
+            let targetWeek = displayedWeekNum;
 
-            const nextDayId = swipeDayOrder[nextIndex];
+            // После субботы переходим на понедельник следующей недели.
+            if (targetIndex >= swipeDayOrder.length) {
+                if (displayedWeekNum >= 18) return;
+                targetWeek = displayedWeekNum + 1;
+                targetIndex = 0;
+            }
+
+            // С понедельника назад переходим на субботу предыдущей недели.
+            if (targetIndex < 0) {
+                if (displayedWeekNum <= 1) return;
+                targetWeek = displayedWeekNum - 1;
+                targetIndex = swipeDayOrder.length - 1;
+            }
+
+            if (targetWeek !== displayedWeekNum) {
+                displayedWeekNum = targetWeek;
+                displayedParity = displayedWeekNum % 2 === 0 ? 'even' : 'odd';
+                updateScheduleUI();
+                updateLiveStatus();
+            }
+
+            const nextDayId = swipeDayOrder[targetIndex];
             const nextBtn = document.querySelector(`.tab-btn[data-day="${nextDayId}"]`);
             showDay(nextDayId, nextBtn);
             nextBtn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
