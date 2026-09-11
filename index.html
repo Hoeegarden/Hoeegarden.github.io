@@ -1530,7 +1530,6 @@
         /* Change-log из GitHub. Для обычного GitHub Pages репозиторий определяется автоматически.
            Если используется собственный домен, можно вручную указать "owner/repository" ниже. */
         const GITHUB_REPO_OVERRIDE = '';
-        const GITHUB_CHANGELOG_CACHE_MS = 10 * 60 * 1000;
         const GITHUB_CHANGELOG_LIMIT = 5;
 
         const changelogBtn = document.getElementById('changelog-btn');
@@ -1538,7 +1537,6 @@
         const changelogClose = document.getElementById('changelog-close');
         const changelogList = document.getElementById('changelog-list');
         const changelogNote = document.getElementById('changelog-note');
-        let changelogLoaded = false;
 
         function getGitHubPageInfo() {
             if (GITHUB_REPO_OVERRIDE.trim()) {
@@ -1628,26 +1626,12 @@
             changelogList.appendChild(block);
         }
 
-        async function loadChangelog(force = false) {
-            if (changelogLoaded && !force) return;
-
+        async function loadChangelog() {
             const repoInfo = getGitHubPageInfo();
             if (!repoInfo) {
                 showChangelogMessage('Репозиторий не определён. Для собственного домена укажи owner/repository в GITHUB_REPO_OVERRIDE внутри HTML.');
                 changelogNote.textContent = 'На адресах *.github.io репозиторий определяется автоматически.';
                 return;
-            }
-
-            const cacheKey = `kfu-changelog-v2:${repoInfo.owner}/${repoInfo.repo}:${repoInfo.path}:${GITHUB_CHANGELOG_LIMIT}`;
-            if (!force) {
-                try {
-                    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-                    if (cached && Date.now() - cached.savedAt < GITHUB_CHANGELOG_CACHE_MS && Array.isArray(cached.entries)) {
-                        renderChangelogEntries(cached.entries, repoInfo.path);
-                        changelogLoaded = true;
-                        return;
-                    }
-                } catch (_) {}
             }
 
             showChangelogMessage('Проверяем последние обновления на GitHub…');
@@ -1656,7 +1640,11 @@
             try {
                 const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoInfo.owner)}/${encodeURIComponent(repoInfo.repo)}/commits?path=${encodeURIComponent(repoInfo.path)}&per_page=${GITHUB_CHANGELOG_LIMIT}`;
                 const response = await fetch(apiUrl, {
-                    headers: { 'Accept': 'application/vnd.github+json' }
+                    headers: {
+                        'Accept': 'application/vnd.github+json',
+                        'Cache-Control': 'no-cache'
+                    },
+                    cache: 'no-store'
                 });
                 if (!response.ok) throw new Error(`GitHub API: ${response.status}`);
 
@@ -1668,14 +1656,11 @@
                     const firstLine = fullMessage.split('\n')[0].trim();
                     return {
                         date: commit?.commit?.committer?.date || commit?.commit?.author?.date || '',
-                        message: firstLine || 'Описание обновления не указано.',
-                        url: commit?.html_url || ''
+                        message: firstLine || 'Описание обновления не указано.'
                     };
                 });
 
                 renderChangelogEntries(entries, repoInfo.path);
-                changelogLoaded = true;
-                try { localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), entries })); } catch (_) {}
             } catch (error) {
                 showChangelogMessage('Не удалось загрузить журнал обновлений. GitHub API сейчас недоступен, но само расписание продолжает работать.');
                 changelogNote.textContent = 'Попробуй открыть Change-log позже.';
