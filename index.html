@@ -455,7 +455,7 @@
             .tab-btn { padding: 8px 10px; font-size: .83em; min-width: max-content; }
             .tab-btn.is-today::after { width: 5px; height: 5px; right: 5px; top: 5px; }
 
-            .day-card { padding: 13px 12px; border-radius: 16px; }
+            .day-card { padding: 13px 12px; border-radius: 16px; touch-action: pan-y; }
             .day-title { font-size: 1.2em; padding: 0 4px 10px; }
             .lesson { padding: 14px 8px 14px 12px; }
             .lesson.current-lesson, .lesson.next-lesson { padding: 14px 70px 14px 14px; margin-left: -2px; margin-right: -2px; }
@@ -1450,6 +1450,63 @@
             if (btnElement) btnElement.classList.add('active');
             updateLessonVisualStates();
         }
+
+        // Свайпы между днями на мобильных устройствах.
+        // Кнопки вкладок продолжают работать параллельно со свайпами.
+        const swipeDayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        let swipeStartX = 0;
+        let swipeStartY = 0;
+        let swipeTracking = false;
+
+        function getActiveDayId() {
+            return document.querySelector('.tab-btn.active')?.dataset.day || null;
+        }
+
+        function moveBySwipe(direction) {
+            if (!window.matchMedia('(max-width: 599px)').matches) return;
+            const currentDayId = getActiveDayId();
+            const currentIndex = swipeDayOrder.indexOf(currentDayId);
+            if (currentIndex === -1) return;
+
+            const nextIndex = currentIndex + direction;
+            if (nextIndex < 0 || nextIndex >= swipeDayOrder.length) return;
+
+            const nextDayId = swipeDayOrder[nextIndex];
+            const nextBtn = document.querySelector(`.tab-btn[data-day="${nextDayId}"]`);
+            showDay(nextDayId, nextBtn);
+            nextBtn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+
+        document.querySelector('.container')?.addEventListener('touchstart', event => {
+            if (!window.matchMedia('(max-width: 599px)').matches) return;
+            if (!event.target.closest('.day-card')) return;
+            if (event.touches.length !== 1) return;
+
+            swipeStartX = event.touches[0].clientX;
+            swipeStartY = event.touches[0].clientY;
+            swipeTracking = true;
+        }, { passive: true });
+
+        document.querySelector('.container')?.addEventListener('touchend', event => {
+            if (!swipeTracking || !window.matchMedia('(max-width: 599px)').matches) return;
+            swipeTracking = false;
+            const touch = event.changedTouches[0];
+            if (!touch) return;
+
+            const deltaX = touch.clientX - swipeStartX;
+            const deltaY = touch.clientY - swipeStartY;
+            const minSwipeDistance = 55;
+
+            // Срабатывает только выраженный горизонтальный жест — обычный вертикальный скролл не перехватываем.
+            if (Math.abs(deltaX) < minSwipeDistance || Math.abs(deltaX) <= Math.abs(deltaY) * 1.15) return;
+
+            if (deltaX < 0) moveBySwipe(1);
+            else moveBySwipe(-1);
+        }, { passive: true });
+
+        document.querySelector('.container')?.addEventListener('touchcancel', () => {
+            swipeTracking = false;
+        }, { passive: true });
 
         document.getElementById('week-toggle').addEventListener('click', () => {
             isAllScheduleMode = false;
