@@ -823,8 +823,20 @@
             text-decoration: none;
         }
         .changelog-link.visible { display: inline-flex; }
+        .changelog-btn {
+            width: 38px;
+            min-width: 38px;
+            padding: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .changelog-btn-label { display: none; }
+
         @media (max-width: 599px) {
-            .secondary-controls .changelog-btn { min-width: auto; padding-inline: 11px; }
+            .secondary-controls .changelog-btn { width: auto; min-width: auto; padding-inline: 11px; }
+            .secondary-controls .changelog-btn-label { display: inline; }
             .changelog-overlay { align-items: flex-end; padding: 10px 10px calc(78px + env(safe-area-inset-bottom)); }
             .changelog-card { width: 100%; border-radius: 18px; max-height: 72vh; }
         }
@@ -855,7 +867,7 @@
                         </div>
                     </div>
                     <button id="theme-toggle" class="btn" type="button" title="Сменить тему" aria-label="Сменить светлую или тёмную тему">🌙</button>
-                    <button id="changelog-btn" class="btn changelog-btn" type="button" title="Последние изменения сайта" aria-label="Открыть change-log">📝 Change-log</button>
+                    <button id="changelog-btn" class="btn changelog-btn" type="button" title="Последние изменения сайта" aria-label="Открыть change-log"><span aria-hidden="true">📝</span><span class="changelog-btn-label">Change-log</span></button>
                 </div>
             </div>
         </div>
