@@ -570,6 +570,7 @@
             .day-card.swipe-dragging {
                 animation: none !important;
                 transition: none !important;
+                touch-action: pan-y;
                 transform:
                     translate3d(var(--swipe-x, 0px), var(--swipe-y, 0px), 0)
                     scale(var(--swipe-scale, 1))
@@ -1569,28 +1570,32 @@
             updateLessonVisualStates();
         }
 
-        // Свайпы между днями на мобильных устройствах.
-        // Карточка движется с лёгким сопротивлением, учитывает скорость жеста
-        // и мягко возвращается или продолжает движение после отпускания пальца.
+
+        // Мобильный свайп v2:
+        // палец задаёт целевую позицию, а карточка догоняет её через rAF.
+        // Это даёт заметную инерцию и убирает ощущение "жёсткого" transform 1:1.
         const swipeDayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
+        let swipePointerActive = false;
+        let swipePointerId = null;
+        let swipeCard = null;
         let swipeStartX = 0;
         let swipeStartY = 0;
-        let swipeRawX = 0;
-        let swipeRenderedX = 0;
-        let swipeTracking = false;
-        let swipeHorizontal = false;
-        let swipeCard = null;
+        let swipeTargetX = 0;
+        let swipeVisualX = 0;
+        let swipeVisualY = 0;
+        let swipeVelocity = 0;
+        let swipeLastPointerX = 0;
+        let swipeLastPointerTime = 0;
+        let swipeAxisLocked = false;
+        let swipeIsHorizontal = false;
+        let swipeRaf = 0;
         let swipeSettling = false;
         let swipeIndicatorTimer = null;
-        let swipeLastX = 0;
-        let swipeLastTime = 0;
-        let swipeVelocityX = 0;
-        let swipeFrame = 0;
 
         function getActiveDayId() {
             const visibleCard = Array.from(document.querySelectorAll('.day-card')).find(card => {
-                const style = window.getComputedStyle(card);
+                const style = getComputedStyle(card);
                 return style.display !== 'none';
             });
             return visibleCard?.id || document.querySelector('.tab-btn.active')?.dataset.day || null;
@@ -1599,7 +1604,7 @@
         function getSwipeTarget(direction) {
             const currentDayId = getActiveDayId();
             const currentIndex = swipeDayOrder.indexOf(currentDayId);
-            if (currentIndex === -1) return null;
+            if (currentIndex < 0) return null;
 
             if (direction > 0) {
                 if (currentIndex < swipeDayOrder.length - 1) {
@@ -1622,7 +1627,7 @@
 
         function showSwipeIndicator(dayId, weekNum) {
             const indicator = document.getElementById('swipe-indicator');
-            if (!indicator || !window.matchMedia('(max-width: 599px)').matches) return;
+            if (!indicator || !matchMedia('(max-width: 599px)').matches) return;
 
             const date = getDateForWeekDay(weekNum, dayId);
             const dateText = date ? ` • ${formatLongDate(date)}` : '';
@@ -1636,7 +1641,7 @@
             swipeIndicatorTimer = setTimeout(() => indicator.classList.remove('show'), 1050);
         }
 
-        function resetSwipeVariables(card = swipeCard) {
+        function resetSwipeStyles(card = swipeCard) {
             if (!card) return;
             card.style.removeProperty('--swipe-x');
             card.style.removeProperty('--swipe-y');
@@ -1644,52 +1649,50 @@
             card.style.removeProperty('--swipe-rotate');
             card.style.removeProperty('--swipe-opacity');
             card.style.removeProperty('--swipe-shadow');
-        }
-
-        function clearSwipeCardState(card = swipeCard) {
-            if (!card) return;
             card.classList.remove('swipe-dragging', 'swipe-snapback', 'swipe-enter-left', 'swipe-enter-right');
-            resetSwipeVariables(card);
-            card.getAnimations().forEach(animation => animation.cancel());
         }
 
-        function rubberBandDistance(delta) {
-            const viewport = Math.max(window.innerWidth, 320);
-            const limit = Math.min(viewport * .50, 230);
-            const sign = Math.sign(delta);
+        function rubberBand(delta) {
+            const width = Math.max(innerWidth, 320);
+            const max = Math.min(width * 0.60, 280);
             const abs = Math.abs(delta);
-            const resisted = limit * (1 - Math.exp(-abs / (limit * .78)));
-            return sign * resisted;
+            const sign = Math.sign(delta);
+            return sign * max * (1 - Math.exp(-abs / (max * 0.95)));
         }
 
-        function renderSwipeNow() {
-            if (!swipeCard || !swipeHorizontal) return;
+        function renderSwipeFrame() {
+            swipeRaf = 0;
+            if (!swipeCard || !swipePointerActive || !swipeIsHorizontal) return;
 
-            const x = rubberBandDistance(swipeRawX);
-            swipeRenderedX = x;
+            const target = rubberBand(swipeTargetX);
 
-            const viewport = Math.max(window.innerWidth, 1);
-            const progress = Math.min(Math.abs(x) / (viewport * .52), 1);
-            const scale = 1 - progress * .018;
-            const rotate = (x / viewport) * 1.55;
-            const y = Math.sin(progress * Math.PI) * 1.4;
-            const opacity = 1 - progress * .11;
-            const shadow = .08 + progress * .10;
+            // Чем дальше карточка от пальца, тем сильнее догоняет.
+            // 0.24 даёт заметную, но не вязкую инерцию.
+            swipeVisualX += (target - swipeVisualX) * 0.24;
 
-            swipeCard.style.setProperty('--swipe-x', `${x.toFixed(2)}px`);
-            swipeCard.style.setProperty('--swipe-y', `${y.toFixed(2)}px`);
+            const width = Math.max(innerWidth, 1);
+            const progress = Math.min(Math.abs(swipeVisualX) / (width * 0.55), 1);
+
+            swipeVisualY = Math.sin(progress * Math.PI) * 2.2;
+            const scale = 1 - progress * 0.026;
+            const rotate = (swipeVisualX / width) * 2.0;
+            const opacity = 1 - progress * 0.14;
+            const shadow = 0.08 + progress * 0.14;
+
+            swipeCard.style.setProperty('--swipe-x', `${swipeVisualX.toFixed(2)}px`);
+            swipeCard.style.setProperty('--swipe-y', `${swipeVisualY.toFixed(2)}px`);
             swipeCard.style.setProperty('--swipe-scale', scale.toFixed(4));
             swipeCard.style.setProperty('--swipe-rotate', `${rotate.toFixed(3)}deg`);
             swipeCard.style.setProperty('--swipe-opacity', opacity.toFixed(3));
             swipeCard.style.setProperty('--swipe-shadow', shadow.toFixed(3));
+
+            if (Math.abs(target - swipeVisualX) > 0.15) {
+                swipeRaf = requestAnimationFrame(renderSwipeFrame);
+            }
         }
 
-        function scheduleSwipeRender() {
-            if (swipeFrame || !swipeCard) return;
-            swipeFrame = requestAnimationFrame(() => {
-                swipeFrame = 0;
-                renderSwipeNow();
-            });
+        function ensureSwipeFrame() {
+            if (!swipeRaf) swipeRaf = requestAnimationFrame(renderSwipeFrame);
         }
 
         function openSwipeTarget(targetWeek, targetDayId, enterDirection = 0) {
@@ -1704,76 +1707,111 @@
             showDay(targetDayId, targetBtn);
 
             const newCard = document.getElementById(targetDayId);
-            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-            if (newCard && enterDirection !== 0 && !reducedMotion) {
+            if (newCard && enterDirection !== 0 && !reduced) {
                 const cls = enterDirection > 0 ? 'swipe-enter-right' : 'swipe-enter-left';
-                newCard.classList.remove('swipe-enter-right', 'swipe-enter-left');
-                void newCard.offsetWidth;
                 newCard.classList.add(cls);
                 newCard.addEventListener('animationend', () => newCard.classList.remove(cls), { once: true });
             }
 
             updateLiveStatus();
             targetBtn?.scrollIntoView({
-                behavior: reducedMotion ? 'auto' : 'smooth',
+                behavior: reduced ? 'auto' : 'smooth',
                 inline: 'center',
                 block: 'nearest'
             });
+
             showSwipeIndicator(targetDayId, targetWeek);
         }
 
-        function animateSwipeBack(card) {
-            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        function springBack(card) {
+            swipeSettling = true;
+            swipePointerActive = false;
+            if (swipeRaf) {
+                cancelAnimationFrame(swipeRaf);
+                swipeRaf = 0;
+            }
 
-            card.classList.remove('swipe-dragging');
-            card.classList.add('swipe-snapback');
+            let x = swipeVisualX;
+            let v = swipeVelocity * 14;
+            let last = performance.now();
 
-            const delay = reducedMotion ? 0 : 350;
-            setTimeout(() => {
-                card.classList.remove('swipe-snapback');
-                resetSwipeVariables(card);
-                if (swipeCard === card) swipeCard = null;
-            }, delay);
+            function step(now) {
+                const dt = Math.min((now - last) / 16.67, 2);
+                last = now;
+
+                // Простая damped spring.
+                const spring = -x * 0.12;
+                v += spring * dt;
+                v *= Math.pow(0.74, dt);
+                x += v * dt;
+
+                const width = Math.max(innerWidth, 1);
+                const progress = Math.min(Math.abs(x) / (width * .55), 1);
+                const scale = 1 - progress * .022;
+                const rotate = (x / width) * 1.7;
+                const opacity = 1 - progress * .10;
+
+                card.style.setProperty('--swipe-x', `${x.toFixed(2)}px`);
+                card.style.setProperty('--swipe-y', `${(Math.sin(progress * Math.PI) * 1.5).toFixed(2)}px`);
+                card.style.setProperty('--swipe-scale', scale.toFixed(4));
+                card.style.setProperty('--swipe-rotate', `${rotate.toFixed(3)}deg`);
+                card.style.setProperty('--swipe-opacity', opacity.toFixed(3));
+
+                if (Math.abs(x) < 0.45 && Math.abs(v) < 0.35) {
+                    resetSwipeStyles(card);
+                    swipeCard = null;
+                    swipeVisualX = 0;
+                    swipeTargetX = 0;
+                    swipeSettling = false;
+                    return;
+                }
+
+                requestAnimationFrame(step);
+            }
+
+            requestAnimationFrame(step);
         }
 
-        function animateSwipeOut(card, direction, target) {
+        function flyOut(card, direction, target) {
             swipeSettling = true;
-            card.classList.remove('swipe-dragging', 'swipe-snapback');
+            swipePointerActive = false;
+            if (swipeRaf) {
+                cancelAnimationFrame(swipeRaf);
+                swipeRaf = 0;
+            }
 
-            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (reducedMotion) {
-                clearSwipeCardState(card);
+            const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduced) {
+                resetSwipeStyles(card);
                 openSwipeTarget(target.week, target.dayId, direction);
                 swipeCard = null;
                 swipeSettling = false;
                 return;
             }
 
-            const viewport = Math.max(window.innerWidth, 320);
-            const destinationX = direction > 0 ? -viewport * 1.06 : viewport * 1.06;
-            const currentX = swipeRenderedX;
-            const currentProgress = Math.min(Math.abs(currentX) / (viewport * .52), 1);
-            const currentScale = 1 - currentProgress * .018;
-            const currentRotate = (currentX / viewport) * 1.55;
+            const width = Math.max(innerWidth, 320);
+            const destination = direction > 0 ? -width * 1.12 : width * 1.12;
+            const startX = swipeVisualX;
 
-            const speed = Math.min(Math.abs(swipeVelocityX), 1.8);
-            const duration = Math.round(Math.max(175, Math.min(285, 285 - speed * 70)));
+            const speed = Math.min(Math.abs(swipeVelocity), 1.8);
+            const duration = Math.round(Math.max(190, 300 - speed * 75));
 
             const animation = card.animate(
                 [
                     {
-                        transform: `translate3d(${currentX}px, 0, 0) scale(${currentScale}) rotate(${currentRotate}deg)`,
+                        transform: `translate3d(${startX}px, ${swipeVisualY}px, 0) scale(.985)`,
                         opacity: getComputedStyle(card).opacity
                     },
                     {
-                        transform: `translate3d(${destinationX}px, 2px, 0) scale(.972) rotate(${direction > 0 ? -1.4 : 1.4}deg)`,
-                        opacity: .12
+                        transform: `translate3d(${destination}px, 2px, 0) scale(.965)`,
+                        opacity: .08
                     }
                 ],
                 {
                     duration,
-                    easing: 'cubic-bezier(.18,.78,.24,1)',
+                    easing: 'cubic-bezier(.16,.82,.22,1)',
                     fill: 'forwards'
                 }
             );
@@ -1782,131 +1820,108 @@
                 .catch(() => {})
                 .finally(() => {
                     animation.cancel();
-                    clearSwipeCardState(card);
+                    resetSwipeStyles(card);
                     openSwipeTarget(target.week, target.dayId, direction);
                     swipeCard = null;
+                    swipeVisualX = 0;
+                    swipeTargetX = 0;
                     swipeSettling = false;
                 });
         }
 
-        function finishSwipe(direction, target) {
-            if (swipeSettling || !swipeCard) return;
+        function finishPointerSwipe() {
+            if (!swipeCard || swipeSettling) return;
 
-            const card = swipeCard;
-            if (!target || direction === 0) {
-                animateSwipeBack(card);
+            const dx = swipeTargetX;
+            const distanceEnough = Math.abs(dx) >= 74;
+            const fastEnough = Math.abs(dx) >= 26 && Math.abs(swipeVelocity) >= 0.42;
+
+            if (!swipeIsHorizontal || (!distanceEnough && !fastEnough)) {
+                springBack(swipeCard);
                 return;
             }
 
-            animateSwipeOut(card, direction, target);
-        }
+            const direction = dx < 0 ? 1 : -1;
+            const target = getSwipeTarget(direction);
 
-        document.querySelector('.container')?.addEventListener('touchstart', event => {
-            if (!window.matchMedia('(max-width: 599px)').matches || swipeSettling) return;
-
-            const card = event.target.closest('.day-card');
-            if (!card || event.touches.length !== 1) return;
-
-            if (swipeFrame) {
-                cancelAnimationFrame(swipeFrame);
-                swipeFrame = 0;
+            if (!target) {
+                springBack(swipeCard);
+                return;
             }
 
-            const touch = event.touches[0];
-            const now = performance.now();
+            flyOut(swipeCard, direction, target);
+        }
 
-            swipeStartX = touch.clientX;
-            swipeStartY = touch.clientY;
-            swipeRawX = 0;
-            swipeRenderedX = 0;
-            swipeTracking = true;
-            swipeHorizontal = false;
+        const swipeContainer = document.querySelector('.container');
+
+        swipeContainer?.addEventListener('pointerdown', event => {
+            if (!matchMedia('(max-width: 599px)').matches || swipeSettling) return;
+            if (event.pointerType === 'mouse') return;
+
+            const card = event.target.closest('.day-card');
+            if (!card) return;
+
+            swipePointerActive = true;
+            swipePointerId = event.pointerId;
             swipeCard = card;
-            swipeLastX = touch.clientX;
-            swipeLastTime = now;
-            swipeVelocityX = 0;
+            swipeStartX = event.clientX;
+            swipeStartY = event.clientY;
+            swipeTargetX = 0;
+            swipeVisualX = 0;
+            swipeVisualY = 0;
+            swipeVelocity = 0;
+            swipeLastPointerX = event.clientX;
+            swipeLastPointerTime = performance.now();
+            swipeAxisLocked = false;
+            swipeIsHorizontal = false;
 
-            clearSwipeCardState(card);
-        }, { passive: true });
+            resetSwipeStyles(card);
+            card.classList.add('swipe-dragging');
+            card.setPointerCapture?.(event.pointerId);
+        });
 
-        document.querySelector('.container')?.addEventListener('touchmove', event => {
-            if (!swipeTracking || !swipeCard || event.touches.length !== 1) return;
+        swipeContainer?.addEventListener('pointermove', event => {
+            if (!swipePointerActive || event.pointerId !== swipePointerId || !swipeCard) return;
 
-            const touch = event.touches[0];
-            const deltaX = touch.clientX - swipeStartX;
-            const deltaY = touch.clientY - swipeStartY;
+            const dx = event.clientX - swipeStartX;
+            const dy = event.clientY - swipeStartY;
 
-            if (!swipeHorizontal) {
-                if (Math.abs(deltaX) < 7 && Math.abs(deltaY) < 7) return;
+            if (!swipeAxisLocked) {
+                if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+                swipeAxisLocked = true;
+                swipeIsHorizontal = Math.abs(dx) > Math.abs(dy) * 1.08;
 
-                if (Math.abs(deltaY) > Math.abs(deltaX) * 1.08) {
-                    swipeTracking = false;
-                    clearSwipeCardState();
+                if (!swipeIsHorizontal) {
+                    resetSwipeStyles(swipeCard);
+                    swipePointerActive = false;
                     swipeCard = null;
                     return;
                 }
-
-                if (Math.abs(deltaX) <= Math.abs(deltaY)) return;
-
-                swipeHorizontal = true;
-                swipeCard.classList.add('swipe-dragging');
             }
+
+            if (!swipeIsHorizontal) return;
 
             const now = performance.now();
-            const dt = Math.max(now - swipeLastTime, 1);
-            const instantVelocity = (touch.clientX - swipeLastX) / dt;
+            const dt = Math.max(now - swipeLastPointerTime, 1);
+            const instantVelocity = (event.clientX - swipeLastPointerX) / dt;
 
-            swipeVelocityX = swipeVelocityX * .68 + instantVelocity * .32;
-            swipeLastX = touch.clientX;
-            swipeLastTime = now;
-            swipeRawX = deltaX;
+            swipeVelocity = swipeVelocity * 0.72 + instantVelocity * 0.28;
+            swipeLastPointerX = event.clientX;
+            swipeLastPointerTime = now;
 
-            scheduleSwipeRender();
-        }, { passive: true });
+            swipeTargetX = dx;
+            ensureSwipeFrame();
+        });
 
-        document.querySelector('.container')?.addEventListener('touchend', event => {
-            if (!swipeTracking || !window.matchMedia('(max-width: 599px)').matches) return;
+        function endPointer(event) {
+            if (!swipePointerActive || event.pointerId !== swipePointerId) return;
+            swipePointerActive = false;
+            try { swipeCard?.releasePointerCapture?.(event.pointerId); } catch (_) {}
+            finishPointerSwipe();
+        }
 
-            swipeTracking = false;
-
-            if (swipeFrame) {
-                cancelAnimationFrame(swipeFrame);
-                swipeFrame = 0;
-                renderSwipeNow();
-            }
-
-            const touch = event.changedTouches[0];
-            if (!touch || !swipeCard) return;
-
-            const deltaX = touch.clientX - swipeStartX;
-            const deltaY = touch.clientY - swipeStartY;
-
-            const distanceEnough =
-                Math.abs(deltaX) >= 68 &&
-                Math.abs(deltaX) > Math.abs(deltaY) * 1.12;
-
-            const fastFlick =
-                Math.abs(deltaX) >= 28 &&
-                Math.abs(swipeVelocityX) >= .48 &&
-                Math.sign(swipeVelocityX) === Math.sign(deltaX);
-
-            if (!swipeHorizontal || (!distanceEnough && !fastFlick)) {
-                finishSwipe(0, null);
-                return;
-            }
-
-            const direction = deltaX < 0 ? 1 : -1;
-            finishSwipe(direction, getSwipeTarget(direction));
-        }, { passive: true });
-
-        document.querySelector('.container')?.addEventListener('touchcancel', () => {
-            swipeTracking = false;
-            if (swipeFrame) {
-                cancelAnimationFrame(swipeFrame);
-                swipeFrame = 0;
-            }
-            if (swipeCard) finishSwipe(0, null);
-        }, { passive: true });
+        swipeContainer?.addEventListener('pointerup', endPointer);
+        swipeContainer?.addEventListener('pointercancel', endPointer);
 
         document.getElementById('week-toggle').addEventListener('click', () => {
             isAllScheduleMode = false;
