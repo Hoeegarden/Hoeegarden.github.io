@@ -407,40 +407,47 @@
       {id:'wednesday',short:'Ср',name:'Среда'}, {id:'thursday',short:'Чт',name:'Четверг'},
       {id:'friday',short:'Пт',name:'Пятница'}, {id:'saturday',short:'Сб',name:'Суббота'}
     ];
-    const DATA = {
-      monday:[
-        {time:'08:30–10:00',title:'Инновационная экономика и технологическое предпринимательство',teacher:'Сафина Л. М.',room:'ауд. 109 · Кремлёвская, 35',start:1,end:9},
-        {time:'08:30–10:00',title:'Теория алгоритмов и анализ сложности',teacher:'Сафина Л. И.',room:'ауд. 109 · Кремлёвская, 35',start:10,end:18},
-        {time:'10:10–11:40',window:true},
-        {time:'12:10–13:40',title:'Современные графические редакторы',teacher:'Хафизова А. Д.',room:'ауд. 1112 · Кремлёвская, 35',start:1,end:17,parity:'odd'},
-        {time:'12:10–13:40',title:'Современные подходы в объектно-ориентированном программировании',teacher:'Мухтарова Т. М.',room:'ауд. 802 · Кремлёвская, 35',start:2,end:18,parity:'even'},
-        {time:'13:50–15:20',title:'Элективные курсы по физической культуре и спорту',teacher:'КСК КФУ',room:'УНИКС · Проф. Нужина, 2/27',start:1,end:17,type:'Физкультура'},
-        {time:'15:50–17:20',title:'Технологическая (проектно-технологическая) практика',teacher:'Еникеева А. И.',room:'ауд. 1111 · Кремлёвская, 35',start:2,end:18,parity:'even',type:'Практика'}
-      ],
-      tuesday:[
-        {time:'08:30–10:00',title:'Иностранный язык',teacher:'Яруллина Д. А. · Маршева Т. В. · Хованская Е. С. · Айметдинов А. Р.',room:'ауд. 409 / 511 / 309Б / 507',start:1,end:18},
-        {time:'10:10–11:40',title:'Современные подходы в объектно-ориентированном программировании',teacher:'Мухтарова Т. М.',room:'ауд. 811 · Кремлёвская, 35',start:1,end:18},
-        {time:'12:10–13:40',title:'Теория алгоритмов и анализ сложности',teacher:'Ахметшина Д. И.',room:'ауд. 1112 · Кремлёвская, 35',start:1,end:18}
-      ],
-      wednesday:[
-        {time:'08:30–10:00',window:true},
-        {time:'10:10–11:40',title:'Базы данных',teacher:'Еникеев И. А.',room:'ауд. 811 · Кремлёвская, 35',start:1,end:18},
-        {time:'12:10–13:40',title:'Инновационная экономика и технологическое предпринимательство',teacher:'Шавалеева Ч. М.',room:'ауд. 1010 · Кремлёвская, 35',start:2,end:18,parity:'even'},
-        {time:'12:10–13:40',window:true,start:1,end:17,parity:'odd',note:'Окно в нечётную неделю'},
-        {time:'13:50–15:20',title:'Основы дизайна и проектирования программного обеспечения',teacher:'Кузнецова И. С.',room:'ауд. 1111 · Кремлёвская, 35',start:1,end:18},
-        {time:'15:50–17:20',title:'Теория алгоритмов и анализ сложности',teacher:'Сафина Л. И.',room:'ауд. 218 · Кремлёвская, 35',start:2,end:18,parity:'even'}
-      ],
-      thursday:[
-        {time:'13:50–15:20',title:'Элективные курсы по физической культуре и спорту',teacher:'КСК КФУ',room:'УНИКС · Проф. Нужина, 2/27',start:1,end:18,type:'Физкультура'},
-        {time:'19:10–20:40',title:'Основы дизайна и проектирования программного обеспечения',teacher:'Кузнецова И. С.',room:'ЭОР · онлайн',start:1,end:18,type:'ЭОР'}
-      ],
-      friday:[{chill:true}],
-      saturday:[
-        {time:'08:30–10:00',title:'Современные подходы в объектно-ориентированном программировании',teacher:'Яруллин Р. С.',room:'ауд. 216 · Кремлёвская, 35',start:2,end:18,parity:'even'},
-        {time:'10:10–11:40',title:'Базы данных',teacher:'Еникеев И. А.',room:'ауд. 218 · Кремлёвская, 35',start:1,end:18},
-        {time:'12:10–13:40',title:'Базы данных',teacher:'Еникеев И. А.',room:'ауд. 809 · Кремлёвская, 35',start:1,end:17,parity:'odd'}
-      ]
+    let DATA = Object.fromEntries(
+    DAYS.map(day => [day.id, []])
+);
+
+async function loadScheduleData() {
+    const response = await fetch('./data/schedule.json', {
+        cache: 'no-store'
+    });
+
+    if (!response.ok) {
+        throw new Error(`Ошибка загрузки расписания: HTTP ${response.status}`);
+    }
+
+    const schedule = await response.json();
+
+    const typeNames = {
+        online: 'ЭОР',
+        laboratory: 'Лабораторная',
+        lecture: 'Лекция',
+        practice: 'Практика',
+        physical_education: 'Физкультура'
     };
+
+    schedule.days.forEach(day => {
+        DATA[day.id] = day.lessons.map(lesson => ({
+            time: lesson.time.replace('-', '–'),
+            title: lesson.subject,
+            teacher: lesson.teacher || 'Не указан',
+            room: lesson.room || 'Не указана',
+            start: lesson.rule.start_week || Math.min(...lesson.weeks),
+            end: lesson.rule.end_week || Math.max(...lesson.weeks),
+            parity: lesson.rule.parity || '',
+            weeks: lesson.weeks,
+            type: typeNames[lesson.type] || ''
+        }));
+    });
+
+    if (!DATA.friday?.length) {
+        DATA.friday = [{ chill: true }];
+    }
+}
     const monthShort=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
     const monthFull=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
     const state={realWeek:1,week:1,day:'monday',all:false};
@@ -452,7 +459,15 @@
     function weekFor(date){const noon=new Date(date.getFullYear(),date.getMonth(),date.getDate(),12);return Math.floor((noon-START)/604800000)+1}
     function dateFor(week,index){const d=new Date(START);d.setDate(START.getDate()+(week-1)*7+index);return d}
     function parity(week){return week%2===0?'even':'odd'}
-    function applies(x,week=state.week){return (x.start||1)<=week&&(x.end||18)>=week&&(!x.parity||x.parity===parity(week))}
+    function applies(x, week = state.week) {
+    if (Array.isArray(x.weeks)) {
+        return x.weeks.includes(week);
+    }
+
+    return (x.start || 1) <= week &&
+        (x.end || 18) >= week &&
+        (!x.parity || x.parity === parity(week));
+}
     function timeRange(t){if(!t)return null;const m=t.match(/(\d{2}):(\d{2})[–-](\d{2}):(\d{2})/);return m?{start:+m[1]*60+(+m[2]),end:+m[3]*60+(+m[4])}:null}
     function fmtDate(d){return `${d.getDate()} ${monthFull[d.getMonth()]}`}
     function fmtRange(w){const a=dateFor(w,0),b=dateFor(w,6);return `${a.getDate()} ${monthShort[a.getMonth()]} — ${b.getDate()} ${monthShort[b.getMonth()]}`}
@@ -616,7 +631,38 @@
     viewport.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!drag.axis&&Math.hypot(dx,dy)>8)drag.axis=Math.abs(dx)>Math.abs(dy)*1.12?'x':'y';if(drag.axis!=='x')return;e.preventDefault();const now=performance.now(),dt=Math.max(1,now-drag.t);drag.v=drag.v*.68+((e.clientX-drag.lastX)/dt)*.32;drag.lastX=e.clientX;drag.t=now;drag.dx=dx;const max=Math.min(innerWidth*.22,88),visual=Math.sign(dx)*max*(1-Math.exp(-Math.abs(dx)/(max*1.35))),p=Math.min(Math.abs(visual)/max,1);drag.panel.style.transition='none';drag.panel.style.transform=`translate3d(${visual*.72}px,0,0) scale(${1-p*.012}) rotate(${visual/innerWidth*.65}deg)`;drag.panel.style.opacity=String(1-p*.08)} ,{passive:false});
     function finishSwipe(e){if(!drag||e.pointerId!==drag.id)return;const d=drag;drag=null;const commit=d.axis==='x'&&(Math.abs(d.dx)>62||(Math.abs(d.dx)>26&&Math.abs(d.v)>.45));const index=DAYS.findIndex(x=>x.id===state.day),dir=d.dx<0?1:-1;let targetIndex=index+dir,targetWeek=state.week;if(targetIndex>5){targetIndex=0;targetWeek++}if(targetIndex<0){targetIndex=5;targetWeek--}const valid=commit&&targetWeek>=1&&targetWeek<=18;d.panel.style.transition='transform .36s cubic-bezier(.18,.86,.24,1),opacity .28s ease';d.panel.style.transform=valid?`translate3d(${-dir*24}px,0,0) scale(.992)`:'translate3d(0,0,0) scale(1)';d.panel.style.opacity=valid?'.45':'1';setTimeout(()=>{d.panel.style.removeProperty('transition');d.panel.style.removeProperty('transform');d.panel.style.removeProperty('opacity');if(valid){state.week=targetWeek;state.all=false;updateWeek();showDay(DAYS[targetIndex].id,dir,true);toast(`${DAYS[targetIndex].name} · ${fmtDate(dateFor(targetWeek,targetIndex))}`)}},valid?150:330)}
     viewport.addEventListener('pointerup',finishSwipe);viewport.addEventListener('pointercancel',finishSwipe);
-    const now=moscowNow();state.realWeek=Math.max(1,weekFor(now));state.week=Math.min(18,state.realWeek);let initial=dayIndexFromDate(now);if(initial>5)initial=0;state.day=DAYS[initial].id;build();showDay(state.day,0,true);updateLive(now);setInterval(()=>{const n=moscowNow();updateLive(n);updateLessonStates(n)},10000);
+    async function init() {
+      try {
+        await loadScheduleData();
+      } catch (error) {
+        console.error('Не удалось загрузить расписание:', error);
+        setLive(
+          'Ошибка загрузки',
+          'Не удалось загрузить расписание',
+          'Проверь наличие файла data/schedule.json и обнови страницу.'
+        );
+      }
+
+      const now = moscowNow();
+      state.realWeek = Math.max(1, weekFor(now));
+      state.week = Math.min(18, state.realWeek);
+
+      let initial = dayIndexFromDate(now);
+      if (initial > 5) initial = 0;
+
+      state.day = DAYS[initial].id;
+      build();
+      showDay(state.day, 0, true);
+      updateLive(now);
+
+      setInterval(() => {
+        const currentTime = moscowNow();
+        updateLive(currentTime);
+        updateLessonStates(currentTime);
+      }, 10000);
+    }
+
+    init();
     if('serviceWorker' in navigator&&location.protocol!=='file:'){
       addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
     }
