@@ -46,7 +46,7 @@ jobs:
         run: |
           python scripts/parse_schedule.py \
             data/timetable.xlsx \
-            --group "09-551 (1)" \
+            --group "09-552 (1)" \
             --output data/schedule.json
 
       - name: Prepare website
