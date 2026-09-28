@@ -10,6 +10,7 @@ selected group column.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -50,6 +51,14 @@ def clean_text(value: Any) -> str:
 
 def canonical_group(value: str) -> str:
     return re.sub(r"\s+", "", value).casefold()
+
+
+def group_slug(value: str) -> str:
+    """Return a stable, URL-safe filename for a group."""
+    readable = re.sub(r"[^0-9a-z]+", "-", value.casefold()).strip("-")
+    readable = readable[:48].rstrip("-") or "group"
+    digest = hashlib.sha1(canonical_group(value).encode("utf-8")).hexdigest()[:8]
+    return f"{readable}-{digest}"
 
 
 def normalize_time(value: str) -> tuple[str, str, str] | None:
@@ -175,8 +184,7 @@ class TimetableParser:
                 found.append((value, source))
         return found
 
-    def parse(self, requested_group: str) -> dict[str, Any]:
-        group = self.select_group(requested_group)
+    def parse_group(self, group: GroupLocation) -> dict[str, Any]:
         end_row = self._schedule_end_row(group)
         days = {day_id: {"id": day_id, "name": DAY_NAMES[day_id], "lessons": []} for day_id in DAY_NAMES}
         current_day: str | None = None
@@ -232,6 +240,9 @@ class TimetableParser:
             "week_count": 18,
             "days": list(days.values()),
         }
+
+    def parse(self, requested_group: str) -> dict[str, Any]:
+        return self.parse_group(self.select_group(requested_group))
 
 
 def split_scheduled_entries(text: str) -> list[str]:
@@ -343,6 +354,8 @@ def build_cli() -> argparse.ArgumentParser:
     parser.add_argument("--sheet", help="Название листа; по умолчанию активный лист")
     parser.add_argument("--group", help='Группа, например "09-551 (1)"')
     parser.add_argument("--list-groups", action="store_true", help="Вывести найденные группы")
+    parser.add_argument("--all-groups", action="store_true", help="Создать отдельный JSON для каждой найденной группы")
+    parser.add_argument("--output-dir", type=Path, help="Каталог для --all-groups; рядом создаётся groups.json")
     parser.add_argument("--output", "-o", type=Path, help="Файл результата; без него JSON выводится в консоль")
     parser.add_argument("--compact", action="store_true", help="JSON без отступов")
     return parser
@@ -357,6 +370,47 @@ def main() -> int:
         parser = TimetableParser(args.input, args.sheet)
         if args.list_groups:
             result: Any = group_rows(parser.find_groups())
+        elif args.all_groups:
+            if not args.output_dir:
+                print("Для --all-groups укажите --output-dir.", file=sys.stderr)
+                return 2
+
+            groups = parser.find_groups()
+            args.output_dir.mkdir(parents=True, exist_ok=True)
+            index_groups: list[dict[str, Any]] = []
+
+            for group in groups:
+                file_name = f"{group_slug(group.name)}.json"
+                schedule = parser.parse_group(group)
+                serialized_schedule = json.dumps(
+                    schedule,
+                    ensure_ascii=False,
+                    indent=None if args.compact else 2,
+                )
+                (args.output_dir / file_name).write_text(serialized_schedule + "\n", encoding="utf-8")
+                index_groups.append(
+                    {
+                        "id": group_slug(group.name),
+                        "name": group.name,
+                        "course": group.course,
+                        "program": group.program,
+                        "file": f"groups/{file_name}",
+                    }
+                )
+
+            index_result = {
+                "version": 1,
+                "source": {"file": args.input.name, "sheet": parser.sheet.title},
+                "groups": index_groups,
+            }
+            index_path = args.output_dir.parent / "groups.json"
+            index_path.write_text(
+                json.dumps(index_result, ensure_ascii=False, indent=None if args.compact else 2) + "\n",
+                encoding="utf-8",
+            )
+            print(f"Создано расписаний: {len(index_groups)}")
+            print(index_path)
+            return 0
         else:
             if not args.group:
                 print("Укажите --group или используйте --list-groups.", file=sys.stderr)
