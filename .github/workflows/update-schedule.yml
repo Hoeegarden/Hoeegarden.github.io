@@ -6,14 +6,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - index.html
-      - data/timetable.xlsx
-      - scripts/**
-      - .github/workflows/update-schedule.yml
-      - manifest.webmanifest
-      - sw.js
-      - cheers.gif
 
 permissions:
   contents: read
@@ -42,19 +34,21 @@ jobs:
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
 
-      - name: Parse schedule
+      - name: Parse schedules for all groups
         run: |
           python scripts/parse_schedule.py \
             data/timetable.xlsx \
-            --group "09-551 (1)" \
-            --output data/schedule.json
+            --all-groups \
+            --output-dir data/groups \
+            --compact
 
       - name: Prepare website
         run: |
           mkdir -p _site/data
 
           cp index.html _site/index.html
-          cp data/schedule.json _site/data/schedule.json
+          cp data/groups.json _site/data/groups.json
+          cp -R data/groups _site/data/groups
 
           if [ -f manifest.webmanifest ]; then
             cp manifest.webmanifest _site/manifest.webmanifest
