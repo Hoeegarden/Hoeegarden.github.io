@@ -9,7 +9,6 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="description" content="Удобное расписание занятий КФУ по учебным неделям">
   <title>Расписание КФУ</title>
-  <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23096fe8'/%3E%3Cpath d='M11 25 32 14l21 11-21 11L11 25Zm8 8v10c8 6 18 6 26 0V33' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <script>try{if(localStorage.getItem('kfu-theme')==='dark')document.documentElement.classList.add('dark')}catch(_){}</script>
   <style>
@@ -118,6 +117,10 @@
     }
     .settings-popover.open { opacity: 1; visibility: visible; transform: none; }
     .setting-label { display:block; margin: 2px 2px 9px; color:var(--muted); font-size:.76rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+    .group-setting-btn { width:100%; justify-content:flex-start; padding:9px 10px; text-align:left; }
+    .group-setting-copy { min-width:0; display:flex; flex-direction:column; align-items:flex-start; line-height:1.2; }
+    .group-setting-copy strong { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.86rem; }
+    .group-setting-copy small { margin-top:3px; color:var(--muted); font-size:.68rem; font-weight:650; }
     .swatches { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
     .swatch { aspect-ratio:1; border:0; border-radius:12px; cursor:pointer; background:var(--swatch); box-shadow:inset 0 0 0 1px rgba(255,255,255,.25); transition:transform .2s var(--ease),box-shadow .2s; }
     .swatch:hover { transform:scale(1.08); }
@@ -234,6 +237,19 @@
     .week-option.selected { color:#fff; border-color:transparent; background:linear-gradient(135deg,var(--accent),var(--accent-2)); box-shadow:0 8px 18px rgba(var(--accent-rgb),.18); }
     .week-option.selected span { color:rgba(255,255,255,.76); }
     .week-option.current:not(.selected) { border-color:rgba(var(--accent-rgb),.36); box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.08); }
+    .group-picker-modal { width:min(100%,620px); overflow:hidden; }
+    .group-search { width:100%; min-height:46px; margin-top:16px; padding:10px 13px; border:1px solid var(--line); border-radius:13px; outline:0; background:var(--surface-soft); color:var(--text); font:inherit; font-size:.92rem; font-weight:650; transition:border-color .2s,box-shadow .2s; }
+    .group-search:focus { border-color:rgba(var(--accent-rgb),.46); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.10); }
+    .group-picker-status { margin:10px 2px 8px; color:var(--muted); font-size:.76rem; font-weight:700; }
+    .group-list { display:grid; gap:7px; max-height:min(52vh,460px); overflow:auto; padding:2px 3px 3px 0; scrollbar-width:thin; }
+    .group-option { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:13px; background:var(--surface-soft); color:var(--text); text-align:left; cursor:pointer; transition:.2s var(--ease); }
+    .group-option:hover { transform:translateY(-1px); border-color:rgba(var(--accent-rgb),.32); }
+    .group-option strong { display:block; font-size:.9rem; }
+    .group-option small { display:block; margin-top:3px; color:var(--muted); font-size:.71rem; font-weight:650; overflow-wrap:anywhere; }
+    .group-option-mark { align-self:center; color:var(--accent); font-size:.74rem; font-weight:850; }
+    .group-option.active { border-color:rgba(var(--accent-rgb),.36); background:rgba(var(--accent-rgb),.08); box-shadow:inset 3px 0 0 var(--accent); }
+    .group-option[disabled] { opacity:.58; cursor:wait; transform:none; }
+    .group-empty { padding:28px 12px; text-align:center; color:var(--muted); font-size:.86rem; }
     .sheet-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:17px; }
     .sheet-title { margin:0; font-size:1.08rem; }
     .sheet-handle { display:none; }
@@ -311,6 +327,12 @@
         <div class="desktop-settings">
           <button class="btn icon" id="settingsBtn" type="button" aria-label="Настройки оформления" aria-expanded="false">⚙️</button>
           <div class="settings-popover" id="settingsPopover">
+            <span class="setting-label">Учебная группа</span>
+            <button class="btn group-setting-btn" data-open-group-picker type="button">
+              <span aria-hidden="true">👥</span>
+              <span class="group-setting-copy"><strong data-current-group>Выбрать группу</strong><small>Сменить расписание</small></span>
+            </button>
+            <div class="settings-divider"></div>
             <span class="setting-label">Цвет акцента</span>
             <div class="swatches" data-swatches></div>
             <div class="settings-divider"></div>
@@ -369,7 +391,13 @@
   <div class="sheet-scrim" id="settingsScrim"></div>
   <section class="mobile-settings-sheet" id="mobileSettings" role="dialog" aria-modal="true" aria-labelledby="mobileSettingsTitle" aria-hidden="true">
     <div class="sheet-handle" aria-hidden="true"></div>
-    <div class="sheet-head"><h2 class="sheet-title" id="mobileSettingsTitle">Оформление</h2><button class="btn icon" id="closeMobileSettings" type="button" aria-label="Закрыть настройки">✕</button></div>
+    <div class="sheet-head"><h2 class="sheet-title" id="mobileSettingsTitle">Настройки</h2><button class="btn icon" id="closeMobileSettings" type="button" aria-label="Закрыть настройки">✕</button></div>
+    <span class="setting-label">Учебная группа</span>
+    <button class="btn group-setting-btn" data-open-group-picker type="button">
+      <span aria-hidden="true">👥</span>
+      <span class="group-setting-copy"><strong data-current-group>Выбрать группу</strong><small>Сменить расписание</small></span>
+    </button>
+    <div class="settings-divider"></div>
     <span class="setting-label">Цвет акцента</span>
     <div class="swatches" data-swatches></div>
     <div class="settings-divider"></div>
@@ -388,10 +416,23 @@
     </section>
   </div>
 
+  <div class="modal-backdrop" id="groupPickerModal" aria-hidden="true">
+    <section class="modal group-picker-modal" role="dialog" aria-modal="true" aria-labelledby="groupPickerTitle">
+      <div class="modal-head">
+        <div><h2 id="groupPickerTitle">Выбор группы</h2><p class="week-picker-help">Начни вводить номер или название программы</p></div>
+        <button class="btn icon" id="closeGroupPicker" type="button" aria-label="Закрыть выбор группы">✕</button>
+      </div>
+      <input class="group-search" id="groupSearch" type="search" placeholder="Например, 09-552 (1)" autocomplete="off" spellcheck="false">
+      <div class="group-picker-status" id="groupPickerStatus">Загружаем список групп…</div>
+      <div class="group-list" id="groupList"></div>
+    </section>
+  </div>
+
   <div class="modal-backdrop" id="changesModal" aria-hidden="true">
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="changesTitle">
       <div class="modal-head"><h2 id="changesTitle">Что нового</h2><button class="btn icon" id="closeChanges" type="button" aria-label="Закрыть">✕</button></div>
       <div class="change-list">
+        <div class="change"><strong>Выбор учебной группы</strong><span>Расписание загружается отдельно для выбранной группы и запоминается на этом устройстве.</span></div>
         <div class="change"><strong>Мини-календарь</strong><span>Нажми на название недели, чтобы быстро перейти к любой из 18 учебных недель.</span></div>
         <div class="change"><strong>Умная нижняя панель</strong><span>Она прячется при прокрутке вниз и возвращается при движении вверх.</span></div>
         <div class="change"><strong>План на завтра</strong><span>После 18:00 показывается первая завтрашняя пара, время и аудитория.</span></div>
@@ -407,51 +448,58 @@
       {id:'wednesday',short:'Ср',name:'Среда'}, {id:'thursday',short:'Чт',name:'Четверг'},
       {id:'friday',short:'Пт',name:'Пятница'}, {id:'saturday',short:'Сб',name:'Суббота'}
     ];
-    let DATA = Object.fromEntries(
-    DAYS.map(day => [day.id, []])
-);
-
-async function loadScheduleData() {
-    const response = await fetch('./data/schedule.json', {
-        cache: 'no-store'
-    });
-
-    if (!response.ok) {
-        throw new Error(`Ошибка загрузки расписания: HTTP ${response.status}`);
-    }
-
-    const schedule = await response.json();
-
+    const DEFAULT_GROUP_NAME = '09-552 (1)';
+    const GROUP_STORAGE_KEY = 'kfu-selected-group';
     const typeNames = {
-        online: 'ЭОР',
-        laboratory: 'Лабораторная',
-        lecture: 'Лекция',
-        practice: 'Практика',
-        physical_education: 'Физкультура'
+      online:'ЭОР', laboratory:'Лабораторная', lecture:'Лекция',
+      practice:'Практика', physical_education:'Физкультура'
     };
+    let GROUPS = [];
+    let activeGroup = null;
+    let DATA = Object.fromEntries(DAYS.map(day=>[day.id,[]]));
 
-    schedule.days.forEach(day => {
-        DATA[day.id] = day.lessons.map(lesson => ({
-            time: lesson.time.replace('-', '–'),
-            title: lesson.subject,
-            teacher: lesson.teacher || 'Не указан',
-            room: lesson.room || 'Не указана',
-            start: lesson.rule.start_week || Math.min(...lesson.weeks),
-            end: lesson.rule.end_week || Math.max(...lesson.weeks),
-            parity: lesson.rule.parity || '',
-            weeks: lesson.weeks,
-            type: typeNames[lesson.type] || ''
-        }));
-    });
-
-    if (!DATA.friday?.length) {
-        DATA.friday = [{ chill: true }];
+    function normalizeGroupKey(value){return String(value||'').trim().toLocaleLowerCase('ru-RU').replace(/\s+/g,'')}
+    function findGroup(value){const key=normalizeGroupKey(value);return GROUPS.find(group=>normalizeGroupKey(group.id)===key||normalizeGroupKey(group.name)===key)||null}
+    async function loadGroupIndex(){
+      const response=await fetch('./data/groups.json',{cache:'no-store'});
+      if(!response.ok)throw new Error(`Список групп недоступен: HTTP ${response.status}`);
+      const index=await response.json();
+      if(!Array.isArray(index.groups)||!index.groups.length)throw new Error('Список групп пуст');
+      GROUPS=index.groups.slice().sort((a,b)=>a.name.localeCompare(b.name,'ru',{numeric:true}));
+      return GROUPS;
     }
-}
+    function applySchedule(schedule){
+      DATA=Object.fromEntries(DAYS.map(day=>[day.id,[]]));
+      schedule.days.forEach(day=>{
+        DATA[day.id]=day.lessons.map(lesson=>{
+          const weeks=Array.isArray(lesson.weeks)?lesson.weeks:[];
+          return {
+            time:lesson.time.replace('-', '–'), title:lesson.subject,
+            teacher:lesson.teacher||'Не указан', room:lesson.room||'Не указана',
+            start:lesson.rule?.start_week||(weeks.length?Math.min(...weeks):1),
+            end:lesson.rule?.end_week||(weeks.length?Math.max(...weeks):18),
+            parity:lesson.rule?.parity||'', weeks,
+            ruleText:lesson.rule?.raw||'',
+            type:typeNames[lesson.type]||''
+          };
+        });
+      });
+      if(!DATA.friday?.length)DATA.friday=[{chill:true}];
+    }
+    async function loadScheduleData(group){
+      if(!group)throw new Error('Учебная группа не выбрана');
+      const response=await fetch(`./data/${group.file}`,{cache:'no-store'});
+      if(!response.ok)throw new Error(`Расписание ${group.name} недоступно: HTTP ${response.status}`);
+      const schedule=await response.json();
+      applySchedule(schedule);
+      activeGroup=group;
+      return schedule;
+    }
     const monthShort=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
     const monthFull=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
     const state={realWeek:1,week:1,day:'monday',all:false};
     const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+    const escapeHTML=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
     function moscowNow(){
       const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Moscow',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
       const o=Object.fromEntries(parts.map(p=>[p.type,p.value])); return new Date(+o.year,+o.month-1,+o.day,+o.hour,+o.minute,+o.second);
@@ -471,13 +519,14 @@ async function loadScheduleData() {
     function timeRange(t){if(!t)return null;const m=t.match(/(\d{2}):(\d{2})[–-](\d{2}):(\d{2})/);return m?{start:+m[1]*60+(+m[2]),end:+m[3]*60+(+m[4])}:null}
     function fmtDate(d){return `${d.getDate()} ${monthFull[d.getMonth()]}`}
     function fmtRange(w){const a=dateFor(w,0),b=dateFor(w,6);return `${a.getDate()} ${monthShort[a.getMonth()]} — ${b.getDate()} ${monthShort[b.getMonth()]}`}
-    function scheduleTag(x){const p=x.parity==='odd'?'Нечётная · ':x.parity==='even'?'Чётная · ':'';return `${p}${x.start||1}–${x.end||18} нед.`}
+    function scheduleTag(x){if(x.ruleText)return x.ruleText;const p=x.parity==='odd'?'Нечётная · ':x.parity==='even'?'Чётная · ':'';return `${p}${x.start||1}–${x.end||18} нед.`}
     function dayIndexFromDate(d){return (d.getDay()+6)%7}
     function lessonHTML(x){
       if(x.chill)return `<div class="chill"><div><div class="chill-icon">🏖️</div><h3>Свободный день</h3><p>Можно выдохнуть — пар нет.</p></div></div>`;
       const r=timeRange(x.time),dur=r?`${Math.round((r.end-r.start)/60*10)/10} ч`:'';
-      if(x.window)return `<article class="lesson window" data-time="${x.time}" data-start="${x.start||1}" data-end="${x.end||18}" data-parity="${x.parity||''}"><div class="lesson-time">${x.time}<small>${dur}</small></div><div class="window-copy">🪟 ${x.note||'Окно между парами'}</div></article>`;
-      return `<article class="lesson" data-time="${x.time}" data-start="${x.start||1}" data-end="${x.end||18}" data-parity="${x.parity||''}"><span class="state-badge"></span><div class="lesson-time">${x.time}<small>${dur}</small></div><div><span class="schedule-tag">${scheduleTag(x)}</span><div class="lesson-title">${x.title}</div><div class="lesson-meta"><span class="meta-item">👤 ${x.teacher}</span><span class="meta-item room">📍 ${x.room}</span>${x.type?`<span class="meta-item">· ${x.type}</span>`:''}</div></div></article>`;
+      const weeks=Array.isArray(x.weeks)?x.weeks.join(','):'';
+      if(x.window)return `<article class="lesson window" data-time="${x.time}" data-start="${x.start||1}" data-end="${x.end||18}" data-parity="${x.parity||''}" data-weeks="${weeks}"><div class="lesson-time">${x.time}<small>${dur}</small></div><div class="window-copy">🪟 ${x.note||'Окно между парами'}</div></article>`;
+      return `<article class="lesson" data-time="${x.time}" data-start="${x.start||1}" data-end="${x.end||18}" data-parity="${x.parity||''}" data-weeks="${weeks}"><span class="state-badge"></span><div class="lesson-time">${x.time}<small>${dur}</small></div><div><span class="schedule-tag">${scheduleTag(x)}</span><div class="lesson-title">${x.title}</div><div class="lesson-meta"><span class="meta-item">👤 ${x.teacher}</span><span class="meta-item room">📍 ${x.room}</span>${x.type?`<span class="meta-item">· ${x.type}</span>`:''}</div></div></article>`;
     }
     function build(){
       $('#dayTabs').innerHTML=DAYS.map(d=>`<button class="day-tab" data-day="${d.id}" type="button"><span class="day-name">${d.short}</span><span class="day-date"></span></button>`).join('');
@@ -490,12 +539,12 @@ async function loadScheduleData() {
       const isEven=parity(state.week)==='even';
       $('#weekLabel').textContent=`${state.week} учебная неделя · ${isEven?'чётная':'нечётная'}`;
       $('#weekRange').textContent=fmtRange(state.week);
-      $('#subtitle').textContent=`${fmtRange(state.week)} · ${isEven?'чётная':'нечётная'} неделя${state.all?' · все пары':''}`;
+      $('#subtitle').textContent=`${activeGroup?.name||'Группа не выбрана'} · ${fmtRange(state.week)} · ${isEven?'чётная':'нечётная'} неделя${state.all?' · все пары':''}`;
       DAYS.forEach((d,i)=>{
         const dt=dateFor(state.week,i),tab=$(`.day-tab[data-day="${d.id}"]`),panel=$(`#panel-${d.id}`);
         tab.querySelector('.day-date').textContent=`${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}`;
         panel.querySelector('h2').textContent=`${d.name}, ${fmtDate(dt)}`;
-        panel.querySelectorAll('.lesson').forEach(el=>{const x={start:+el.dataset.start,end:+el.dataset.end,parity:el.dataset.parity||null};el.classList.toggle('hidden',!state.all&&!applies(x))});
+        panel.querySelectorAll('.lesson').forEach(el=>{const x={start:+el.dataset.start,end:+el.dataset.end,parity:el.dataset.parity||null,weeks:el.dataset.weeks?el.dataset.weeks.split(',').map(Number):null};el.classList.toggle('hidden',!state.all&&!applies(x))});
         const count=visibleItems(d.id).filter(x=>!x.window&&!x.chill).length;
         panel.querySelector('.day-summary').textContent=count?`${count} ${count===1?'пара':count<5?'пары':'пар'}`:'Без пар';
         const empty=panel.querySelector('.empty'),shown=[...panel.querySelectorAll('.lesson')].some(x=>!x.classList.contains('hidden'));
@@ -539,6 +588,65 @@ async function loadScheduleData() {
         button.classList.toggle('selected',week===state.week);
         button.classList.toggle('current',week===state.realWeek);
       });
+    }
+    function updateGroupUI(){
+      $$('[data-current-group]').forEach(element=>element.textContent=activeGroup?.name||'Выбрать группу');
+      document.title=activeGroup?`${activeGroup.name} — Расписание КФУ`:'Расписание КФУ';
+    }
+    function renderGroupList(query=''){
+      const list=$('#groupList'),status=$('#groupPickerStatus');
+      if(!list||!status)return;
+      const needle=normalizeGroupKey(query);
+      const matches=GROUPS.filter(group=>{
+        const haystack=normalizeGroupKey(`${group.name} ${group.course} ${group.program}`);
+        return !needle||haystack.includes(needle);
+      });
+      status.textContent=matches.length?`Найдено групп: ${matches.length}`:'Совпадений нет';
+      list.innerHTML=matches.length?matches.map(group=>{
+        const details=[group.course,group.program].filter(Boolean).join(' · ');
+        const selected=group.id===activeGroup?.id;
+        return `<button class="group-option${selected?' active':''}" data-group-id="${escapeHTML(group.id)}" type="button"><span><strong>${escapeHTML(group.name)}</strong><small>${escapeHTML(details||'Учебная группа')}</small></span><span class="group-option-mark">${selected?'Выбрана':'Выбрать'}</span></button>`;
+      }).join(''):'<div class="group-empty">Попробуй ввести только номер группы без пробелов.</div>';
+    }
+    function rebuildSchedule(dayId=state.day){
+      $$('.day-panel').forEach(panel=>panel.classList.remove('active'));
+      state.day='';
+      build();
+      showDay(DAYS.some(day=>day.id===dayId)?dayId:'monday',0,true);
+    }
+    async function chooseGroup(group){
+      if(!group)return;
+      if(group.id===activeGroup?.id){
+        localStorage.setItem(GROUP_STORAGE_KEY,group.id);
+        const currentUrl=new URL(location.href);
+        currentUrl.searchParams.set('group',group.id);
+        history.replaceState(null,'',currentUrl);
+        closeGroupPicker();
+        toast(`Группа ${group.name} выбрана`);
+        return;
+      }
+      const status=$('#groupPickerStatus');
+      $$('.group-option').forEach(button=>button.disabled=true);
+      status.textContent=`Загружаем расписание ${group.name}…`;
+      try{
+        await loadScheduleData(group);
+        localStorage.setItem(GROUP_STORAGE_KEY,group.id);
+        const url=new URL(location.href);
+        url.searchParams.set('group',group.id);
+        history.replaceState(null,'',url);
+        state.all=false;
+        rebuildSchedule();
+        updateGroupUI();
+        renderGroupList($('#groupSearch').value);
+        closeGroupPicker();
+        settings.classList.remove('open');
+        setMobileSettings(false);
+        toast(`Группа ${group.name} выбрана`);
+      }catch(error){
+        console.error('Не удалось сменить группу:',error);
+        status.textContent='Не удалось загрузить расписание. Попробуй ещё раз.';
+        $$('.group-option').forEach(button=>button.disabled=false);
+      }
     }
     function updateLessonStates(now){
       $$('.lesson').forEach(x=>{x.classList.remove('past','current','next');const b=x.querySelector('.state-badge');if(b)b.textContent='' });
@@ -608,13 +716,32 @@ async function loadScheduleData() {
     $('#closeMobileSettings').addEventListener('click',()=>setMobileSettings(false));
     settingsScrim.addEventListener('click',()=>setMobileSettings(false));
     document.addEventListener('click',e=>{if(!settings.contains(e.target)&&e.target!==$('#settingsBtn'))settings.classList.remove('open')});
+    const groupPicker=$('#groupPickerModal'),groupSearch=$('#groupSearch');
+    function openGroupPicker(){
+      renderGroupList(groupSearch.value);
+      groupPicker.classList.add('open');
+      groupPicker.setAttribute('aria-hidden','false');
+      settings.classList.remove('open');
+      setMobileSettings(false);
+      setTimeout(()=>groupSearch.focus(),80);
+    }
+    function closeGroupPicker(){groupPicker.classList.remove('open');groupPicker.setAttribute('aria-hidden','true')}
+    $$('[data-open-group-picker]').forEach(button=>button.addEventListener('click',event=>{event.stopPropagation();openGroupPicker()}));
+    $('#closeGroupPicker').addEventListener('click',closeGroupPicker);
+    groupPicker.addEventListener('click',event=>{if(event.target===groupPicker)closeGroupPicker()});
+    groupSearch.addEventListener('input',()=>renderGroupList(groupSearch.value));
+    $('#groupList').addEventListener('click',event=>{
+      const button=event.target.closest('[data-group-id]');
+      if(!button)return;
+      chooseGroup(findGroup(button.dataset.groupId));
+    });
     const weekPicker=$('#weekPickerModal');
     function openWeekPicker(){weekPicker.classList.add('open');weekPicker.setAttribute('aria-hidden','false');updateWeekPickerState()}
     function closeWeekPicker(){weekPicker.classList.remove('open');weekPicker.setAttribute('aria-hidden','true')}
     $('#weekPickerBtn').addEventListener('click',openWeekPicker);
     $('#closeWeekPicker').addEventListener('click',closeWeekPicker);
     weekPicker.addEventListener('click',e=>{if(e.target===weekPicker)closeWeekPicker()});
-    const modal=$('#changesModal');$('#changesBtn').addEventListener('click',()=>{modal.classList.add('open');modal.setAttribute('aria-hidden','false')});$('#closeChanges').addEventListener('click',()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')});modal.addEventListener('click',e=>{if(e.target===modal)$('#closeChanges').click()});document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#closeChanges').click();closeWeekPicker();setMobileSettings(false)}});
+    const modal=$('#changesModal');$('#changesBtn').addEventListener('click',()=>{modal.classList.add('open');modal.setAttribute('aria-hidden','false')});$('#closeChanges').addEventListener('click',()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')});modal.addEventListener('click',e=>{if(e.target===modal)$('#closeChanges').click()});document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#closeChanges').click();closeWeekPicker();closeGroupPicker();setMobileSettings(false)}});
     const dock=$('.mobile-dock');let lastScrollY=scrollY,scrollTick=false;
     function updateDockOnScroll(){
       scrollTick=false;
@@ -632,15 +759,23 @@ async function loadScheduleData() {
     function finishSwipe(e){if(!drag||e.pointerId!==drag.id)return;const d=drag;drag=null;const commit=d.axis==='x'&&(Math.abs(d.dx)>62||(Math.abs(d.dx)>26&&Math.abs(d.v)>.45));const index=DAYS.findIndex(x=>x.id===state.day),dir=d.dx<0?1:-1;let targetIndex=index+dir,targetWeek=state.week;if(targetIndex>5){targetIndex=0;targetWeek++}if(targetIndex<0){targetIndex=5;targetWeek--}const valid=commit&&targetWeek>=1&&targetWeek<=18;d.panel.style.transition='transform .36s cubic-bezier(.18,.86,.24,1),opacity .28s ease';d.panel.style.transform=valid?`translate3d(${-dir*24}px,0,0) scale(.992)`:'translate3d(0,0,0) scale(1)';d.panel.style.opacity=valid?'.45':'1';setTimeout(()=>{d.panel.style.removeProperty('transition');d.panel.style.removeProperty('transform');d.panel.style.removeProperty('opacity');if(valid){state.week=targetWeek;state.all=false;updateWeek();showDay(DAYS[targetIndex].id,dir,true);toast(`${DAYS[targetIndex].name} · ${fmtDate(dateFor(targetWeek,targetIndex))}`)}},valid?150:330)}
     viewport.addEventListener('pointerup',finishSwipe);viewport.addEventListener('pointercancel',finishSwipe);
     async function init() {
+      const requestedGroup=new URLSearchParams(location.search).get('group');
+      const savedGroup=localStorage.getItem(GROUP_STORAGE_KEY);
+      const firstVisit=!requestedGroup&&!savedGroup;
       try {
-        await loadScheduleData();
+        await loadGroupIndex();
+        const initialGroup=findGroup(requestedGroup)||findGroup(savedGroup)||findGroup(DEFAULT_GROUP_NAME)||GROUPS[0];
+        await loadScheduleData(initialGroup);
+        if(requestedGroup)localStorage.setItem(GROUP_STORAGE_KEY,initialGroup.id);
       } catch (error) {
         console.error('Не удалось загрузить расписание:', error);
         setLive(
           'Ошибка загрузки',
           'Не удалось загрузить расписание',
-          'Проверь наличие файла data/schedule.json и обнови страницу.'
+          'Проверь публикацию data/groups.json и обнови страницу.'
         );
+        renderSwatches();
+        return;
       }
 
       const now = moscowNow();
@@ -653,7 +788,11 @@ async function loadScheduleData() {
       state.day = DAYS[initial].id;
       build();
       showDay(state.day, 0, true);
+      updateGroupUI();
+      renderGroupList();
       updateLive(now);
+
+      if(firstVisit)setTimeout(openGroupPicker,260);
 
       setInterval(() => {
         const currentTime = moscowNow();
